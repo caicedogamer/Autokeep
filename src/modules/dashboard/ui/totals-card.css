@@ -1,0 +1,51 @@
+.totals-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--ak-spacing-4);
+  padding: var(--ak-spacing-4);
+  background: var(--ak-color-surface-1);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 8px;
+}
+
+.totals-card__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-spacing-1);
+}
+
+.totals-card__label {
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.totals-card__value {
+  font-size: var(--ak-font-size-2xl);
+  font-weight: 700;
+  color: var(--ak-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.totals-card__value--income {
+  color: var(--ak-color-success);
+}
+.totals-card__value--expense {
+  color: var(--ak-color-danger);
+}
+.totals-card__value--net-positive {
+  color: var(--ak-color-success);
+}
+.totals-card__value--net-negative {
+  color: var(--ak-color-danger);
+}
+
+.totals-card__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ak-color-text-muted);
+  font-style: italic;
+  padding: var(--ak-spacing-5) 0;
+}

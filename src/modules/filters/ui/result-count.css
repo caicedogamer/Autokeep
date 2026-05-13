@@ -1,0 +1,11 @@
+.result-count {
+  padding: var(--ak-spacing-2) var(--ak-spacing-4);
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text-muted);
+  border-bottom: 1px solid var(--ak-color-border);
+}
+
+.result-count strong {
+  color: var(--ak-color-text);
+  font-weight: 600;
+}

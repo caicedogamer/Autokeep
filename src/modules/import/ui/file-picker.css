@@ -1,0 +1,53 @@
+.file-picker-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ak-spacing-3);
+  padding: var(--ak-spacing-7) var(--ak-spacing-4);
+  border: 2px dashed var(--ak-color-border);
+  border-radius: var(--ak-radius-md);
+  background: var(--ak-color-surface-1);
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+  min-height: 200px;
+}
+
+.file-picker-zone:hover {
+  border-color: var(--ak-color-accent);
+  background: var(--ak-color-surface-2);
+}
+
+.file-picker-zone:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 2px;
+}
+
+.file-picker-zone.drag-over {
+  border-color: var(--ak-color-accent);
+  background: rgba(31, 95, 190, 0.06);
+}
+
+.file-picker-zone p {
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text-muted);
+  line-height: var(--ak-line-height-base);
+}
+
+.file-picker-zone strong {
+  display: block;
+  font-size: var(--ak-font-size-lg);
+  color: var(--ak-color-text);
+  margin-bottom: var(--ak-spacing-2);
+}
+
+.file-picker-zone input[type='file'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

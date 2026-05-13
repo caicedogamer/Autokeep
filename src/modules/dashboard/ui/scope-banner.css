@@ -1,0 +1,30 @@
+.scope-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ak-spacing-2);
+  padding: var(--ak-spacing-2) var(--ak-spacing-4);
+  background: var(--ak-color-surface-2);
+  border-bottom: 1px solid var(--ak-color-border);
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text-muted);
+}
+
+.scope-banner__period {
+  font-weight: 600;
+  color: var(--ak-color-text);
+}
+
+.scope-banner__filter-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--ak-spacing-2);
+  background: var(--ak-color-surface-1);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 12px;
+  font-size: var(--ak-font-size-sm);
+}
+
+.scope-banner__no-filter {
+  font-style: italic;
+}

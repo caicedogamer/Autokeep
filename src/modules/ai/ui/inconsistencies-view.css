@@ -1,0 +1,64 @@
+.inconsistencies-view {
+  padding: var(--ak-spacing-4);
+}
+
+.inconsistencies-view__empty {
+  color: var(--ak-color-text-muted);
+  font-style: italic;
+  padding: var(--ak-spacing-5) 0;
+  text-align: center;
+}
+
+.inconsistencies-view__group {
+  margin-bottom: var(--ak-spacing-5);
+}
+
+.inconsistencies-view__group-title {
+  font-size: var(--ak-font-size-base);
+  font-weight: 600;
+  color: var(--ak-color-text);
+  margin: 0 0 var(--ak-spacing-3);
+  text-transform: capitalize;
+}
+
+.inconsistencies-view__item {
+  background: var(--ak-color-surface-1);
+  border: 1px solid var(--ak-color-border);
+  border-left: 4px solid var(--ak-color-warning);
+  border-radius: 6px;
+  padding: var(--ak-spacing-3) var(--ak-spacing-4);
+  margin-bottom: var(--ak-spacing-2);
+}
+
+.inconsistencies-view__reason {
+  color: var(--ak-color-text);
+  margin-bottom: var(--ak-spacing-2);
+}
+
+.inconsistencies-view__actions {
+  display: flex;
+  gap: var(--ak-spacing-2);
+}
+
+.inconsistencies-view__btn {
+  padding: var(--ak-spacing-1) var(--ak-spacing-3);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 4px;
+  background: transparent;
+  font-size: var(--ak-font-size-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.inconsistencies-view__btn:hover {
+  background: var(--ak-color-surface-2);
+}
+
+.inconsistencies-view__btn:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 2px;
+}
+
+.inconsistencies-view__btn--dismiss {
+  color: var(--ak-color-text-muted);
+}

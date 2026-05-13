@@ -1,0 +1,45 @@
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+
+# Build artifacts
+dist/
+build/
+.vite/
+.cache/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+
+# Test artifacts
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# Environment & secrets (never commit; export feature is the backup channel)
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Local logs
+*.log
+logs/
+
+# Husky internals are managed by `husky install`, but the hooks themselves
+# (`.husky/*`) ARE committed.
+.husky/_/

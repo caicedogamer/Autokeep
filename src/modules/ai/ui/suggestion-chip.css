@@ -1,0 +1,67 @@
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-spacing-2);
+  padding: var(--ak-spacing-1) var(--ak-spacing-3);
+  background: var(--ak-color-surface-1);
+  border: 1px solid var(--ak-color-accent);
+  border-radius: 20px;
+  font-size: var(--ak-font-size-sm);
+}
+
+.suggestion-chip__label {
+  color: var(--ak-color-text-muted);
+}
+
+.suggestion-chip__category {
+  font-weight: 600;
+  color: var(--ak-color-text);
+}
+
+.suggestion-chip__confidence {
+  padding: 2px var(--ak-spacing-2);
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.suggestion-chip__confidence--alta {
+  background: #d1f0db;
+  color: #1d6c3a;
+}
+
+.suggestion-chip__confidence--media {
+  background: #fef3c7;
+  color: #8b5a00;
+}
+
+.suggestion-chip__confidence--baja {
+  background: #fce8e8;
+  color: #b3261e;
+}
+
+.suggestion-chip__btn {
+  padding: 2px var(--ak-spacing-2);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 4px;
+  background: transparent;
+  font-size: var(--ak-font-size-sm);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.suggestion-chip__btn:hover {
+  background: var(--ak-color-surface-2);
+}
+
+.suggestion-chip__btn:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 2px;
+}
+
+.suggestion-chip__btn--accept {
+  border-color: var(--ak-color-accent);
+  color: var(--ak-color-accent);
+}

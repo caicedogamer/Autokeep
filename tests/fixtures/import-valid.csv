@@ -1,0 +1,4 @@
+date,type,amount,currency,category,description,counterparty
+2026-05-01,income,100.00,ARS,Ventas,Factura A 0001-00012345,Acme S.A.
+2026-05-02,expense,50.00,ARS,Servicios,Pago internet mayo,Telecom Argentina
+2026-05-03,income,2500.00,ARS,Ventas,Factura A 0001-00012346,Beta Corp

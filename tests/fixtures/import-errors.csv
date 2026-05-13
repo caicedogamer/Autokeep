@@ -1,0 +1,3 @@
+date,type,amount,currency,category,description,counterparty
+01/05/2026,debit,-100.00,USD,,Too long description that should cause an error in the validation pipeline,
+2026-99-99,income,0,ARS,Ventas,,

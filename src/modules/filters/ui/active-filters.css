@@ -1,0 +1,81 @@
+.active-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ak-spacing-2);
+  padding: var(--ak-spacing-2) var(--ak-spacing-4);
+  min-height: 2.5rem;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ak-spacing-2);
+  flex: 1;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-spacing-1);
+  padding: var(--ak-spacing-1) var(--ak-spacing-2) var(--ak-spacing-1) var(--ak-spacing-3);
+  background: var(--ak-color-surface-2);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 20px;
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text);
+  line-height: 1;
+}
+
+.filter-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ak-color-text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.filter-chip button:hover {
+  background: var(--ak-color-danger);
+  color: #ffffff;
+}
+
+.filter-chip button:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 1px;
+}
+
+.filter-clear-all {
+  padding: var(--ak-spacing-1) var(--ak-spacing-3);
+  border: 1px solid var(--ak-color-border);
+  border-radius: var(--ak-radius-sm);
+  background: transparent;
+  color: var(--ak-color-text-muted);
+  font-size: var(--ak-font-size-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.filter-clear-all:hover {
+  background: var(--ak-color-surface-2);
+  color: var(--ak-color-text);
+}
+
+.filter-clear-all:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 2px;
+}

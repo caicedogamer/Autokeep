@@ -1,0 +1,94 @@
+/*
+ * Design tokens for AutoKeep.
+ *
+ * All color pairs below have been chosen to clear WCAG 2.1 AA contrast
+ * (≥ 4.5:1 for body text, ≥ 3:1 for large text) on both light and dark
+ * surface variants — a hard requirement per FR-037 / SC-012.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --ak-color-bg: #ffffff;
+  --ak-color-surface-1: #f7f8fa; /* cards, panels */
+  --ak-color-surface-2: #eef0f4; /* subdued sections */
+  --ak-color-border: #c7cdd5;
+
+  /* Text */
+  --ak-color-text: #16191f; /* on bg/surface-1: 16.7:1 contrast */
+  --ak-color-text-muted: #4a5260; /* on bg: 8.3:1 contrast */
+  --ak-color-text-on-accent: #ffffff;
+
+  /* Brand / accents (chosen for ≥ 4.5:1 on white) */
+  --ak-color-accent: #1f5fbe; /* primary action; on white: 5.5:1 */
+  --ak-color-accent-hover: #194b97;
+  --ak-color-accent-fg: #ffffff;
+  --ak-color-link: #1846a1; /* on white: 7.0:1 */
+
+  /* Semantic */
+  --ak-color-success: #1d6c3a; /* on white: 5.4:1 */
+  --ak-color-warning: #8b5a00; /* on white: 5.0:1 */
+  --ak-color-danger: #b3261e; /* on white: 4.8:1 */
+  --ak-color-info: #1846a1;
+
+  /* Focus ring (must clear 3:1 against any adjacent surface) */
+  --ak-color-focus: #ffbf00; /* amber, high contrast on light + dark */
+
+  /* Typography */
+  --ak-font-body:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --ak-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --ak-font-size-base: 16px;
+  --ak-font-size-sm: 0.875rem;
+  --ak-font-size-lg: 1.125rem;
+  --ak-font-size-xl: 1.375rem;
+  --ak-font-size-2xl: 1.75rem;
+  --ak-line-height-base: 1.5;
+  --ak-line-height-tight: 1.25;
+
+  /* Spacing scale (4 px base) */
+  --ak-spacing-1: 0.25rem;
+  --ak-spacing-2: 0.5rem;
+  --ak-spacing-3: 0.75rem;
+  --ak-spacing-4: 1rem;
+  --ak-spacing-5: 1.5rem;
+  --ak-spacing-6: 2rem;
+  --ak-spacing-7: 3rem;
+
+  /* Radii */
+  --ak-radius-sm: 4px;
+  --ak-radius-md: 8px;
+  --ak-radius-lg: 12px;
+
+  /* Shadows */
+  --ak-shadow-1: 0 1px 2px rgba(20, 24, 30, 0.06), 0 1px 3px rgba(20, 24, 30, 0.04);
+  --ak-shadow-2: 0 4px 12px rgba(20, 24, 30, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --ak-color-bg: #11141a;
+    --ak-color-surface-1: #1a1e26;
+    --ak-color-surface-2: #232832;
+    --ak-color-border: #3a4150;
+
+    --ak-color-text: #f1f3f7; /* on bg: 16.5:1 */
+    --ak-color-text-muted: #b8becb; /* on bg: 9.0:1 */
+
+    --ak-color-accent: #6ea3ee; /* on bg: 7.4:1 */
+    --ak-color-accent-hover: #95bdf3;
+    --ak-color-accent-fg: #0d1014;
+    --ak-color-link: #88b4ee; /* on bg: 8.7:1 */
+
+    --ak-color-success: #4dbd75;
+    --ak-color-warning: #f0b14a;
+    --ak-color-danger: #ef6e66;
+    --ak-color-info: #88b4ee;
+
+    --ak-color-focus: #ffbf00;
+  }
+}

@@ -1,0 +1,45 @@
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ak-spacing-3);
+  padding: var(--ak-spacing-3) var(--ak-spacing-4);
+  background: var(--ak-color-surface-1);
+  border-bottom: 1px solid var(--ak-color-border);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-spacing-1);
+  min-width: 160px;
+  flex: 1 1 160px;
+}
+
+.filter-group label {
+  font-size: var(--ak-font-size-sm);
+  font-weight: 600;
+  color: var(--ak-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-group input,
+.filter-group select {
+  padding: var(--ak-spacing-1) var(--ak-spacing-3);
+  border: 1px solid var(--ak-color-border);
+  border-radius: var(--ak-radius-sm);
+  background: var(--ak-color-bg);
+  color: var(--ak-color-text);
+  font-size: var(--ak-font-size-sm);
+  font-family: var(--ak-font-body);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.filter-group input:focus-visible,
+.filter-group select:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 2px;
+  border-color: var(--ak-color-accent);
+}

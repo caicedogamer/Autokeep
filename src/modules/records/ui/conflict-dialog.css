@@ -1,0 +1,53 @@
+.conflict-dialog {
+  width: min(640px, 95vw);
+  padding: var(--ak-spacing-6);
+  border: 2px solid var(--ak-color-warning);
+  border-radius: var(--ak-radius-md);
+  background: var(--ak-color-bg);
+  box-shadow: var(--ak-shadow-2);
+}
+
+.conflict-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.conflict-dialog h2 {
+  font-size: var(--ak-font-size-xl);
+  font-weight: 700;
+  color: var(--ak-color-warning);
+  margin-bottom: var(--ak-spacing-3);
+}
+
+.conflict-dialog p {
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text-muted);
+  margin-bottom: var(--ak-spacing-4);
+  line-height: var(--ak-line-height-base);
+}
+
+.conflict-dialog table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ak-font-size-sm);
+  margin-bottom: var(--ak-spacing-5);
+}
+
+.conflict-dialog th {
+  padding: var(--ak-spacing-2) var(--ak-spacing-3);
+  text-align: left;
+  font-weight: 600;
+  color: var(--ak-color-text-muted);
+  border-bottom: 2px solid var(--ak-color-border);
+}
+
+.conflict-dialog td {
+  padding: var(--ak-spacing-2) var(--ak-spacing-3);
+  border-bottom: 1px solid var(--ak-color-border);
+  color: var(--ak-color-text);
+}
+
+.conflict-dialog__actions {
+  display: flex;
+  gap: var(--ak-spacing-3);
+  justify-content: flex-end;
+}

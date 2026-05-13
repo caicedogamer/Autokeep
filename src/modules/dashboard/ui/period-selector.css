@@ -1,0 +1,69 @@
+.period-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ak-spacing-2);
+  align-items: center;
+  padding: var(--ak-spacing-3) 0;
+}
+
+.period-selector__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ak-spacing-1);
+}
+
+.period-selector__btn {
+  padding: var(--ak-spacing-1) var(--ak-spacing-3);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 4px;
+  background: var(--ak-color-bg);
+  color: var(--ak-color-text);
+  font-size: var(--ak-font-size-sm);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.period-selector__btn:hover {
+  background: var(--ak-color-surface-1);
+  border-color: var(--ak-color-accent);
+}
+
+.period-selector__btn:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 2px;
+}
+
+.period-selector__btn[aria-pressed='true'] {
+  background: var(--ak-color-accent);
+  border-color: var(--ak-color-accent);
+  color: var(--ak-color-text-on-accent);
+}
+
+.period-selector__custom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ak-spacing-2);
+  align-items: center;
+  margin-left: var(--ak-spacing-3);
+}
+
+.period-selector__custom label {
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text-muted);
+}
+
+.period-selector__custom input[type='date'] {
+  padding: var(--ak-spacing-1) var(--ak-spacing-2);
+  border: 1px solid var(--ak-color-border);
+  border-radius: 4px;
+  font-size: var(--ak-font-size-sm);
+  color: var(--ak-color-text);
+  background: var(--ak-color-bg);
+}
+
+.period-selector__custom input[type='date']:focus-visible {
+  outline: 3px solid var(--ak-color-focus);
+  outline-offset: 1px;
+}

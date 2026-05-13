@@ -1,0 +1,57 @@
+.records-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--ak-font-size-sm);
+  background: var(--ak-color-bg);
+}
+
+.records-list thead th {
+  padding: var(--ak-spacing-2) var(--ak-spacing-3);
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ak-color-text-muted);
+  border-bottom: 2px solid var(--ak-color-border);
+  white-space: nowrap;
+}
+
+.records-list tbody td {
+  padding: var(--ak-spacing-2) var(--ak-spacing-3);
+  border-bottom: 1px solid var(--ak-color-border);
+  color: var(--ak-color-text);
+  vertical-align: middle;
+}
+
+.records-list__row {
+  transition: background 0.1s;
+}
+
+.records-list__row:hover {
+  background: var(--ak-color-surface-1);
+}
+
+/* Left accent stripe per record type */
+.records-list__row--income td:first-child {
+  border-left: 3px solid var(--ak-color-success);
+  padding-left: calc(var(--ak-spacing-3) - 3px);
+}
+
+.records-list__row--expense td:first-child {
+  border-left: 3px solid var(--ak-color-danger);
+  padding-left: calc(var(--ak-spacing-3) - 3px);
+}
+
+.records-list__actions {
+  display: flex;
+  gap: var(--ak-spacing-2);
+  justify-content: flex-end;
+}
+
+.records-list__empty {
+  padding: var(--ak-spacing-7) var(--ak-spacing-4);
+  text-align: center;
+  color: var(--ak-color-text-muted);
+  font-size: var(--ak-font-size-sm);
+}

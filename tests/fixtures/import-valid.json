@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "currency": "ARS",
+  "currencyMinorUnits": 2,
+  "records": [
+    {
+      "date": "2026-05-01",
+      "type": "income",
+      "amount": 10000,
+      "category": "Ventas",
+      "description": "Factura A 0001-00012345",
+      "counterparty": "Acme S.A."
+    },
+    {
+      "date": "2026-05-02",
+      "type": "expense",
+      "amount": 5000,
+      "category": "Servicios",
+      "description": "Pago internet mayo",
+      "counterparty": "Telecom Argentina"
+    }
+  ]
+}
