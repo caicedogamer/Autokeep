@@ -1,0 +1,360 @@
+/*
+ * App shell layout — sidebar + topbar + content.
+ *
+ * Used by src/main.ts to compose the global SPA chrome after workspace
+ * unlock. Onboarding / unlock screens DO NOT use this shell.
+ *
+ * Grid layout (desktop):
+ *   ┌──────────┬─────────────────────┐
+ *   │ sidebar  │ topbar              │
+ *   │ (240px)  ├─────────────────────┤
+ *   │          │ content (1fr)       │
+ *   └──────────┴─────────────────────┘
+ *
+ * Under 1024px the sidebar collapses to an icon-only rail (56 px).
+ */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--ak-sidebar-width) 1fr;
+  min-height: 100vh;
+  background: var(--ak-color-bg);
+  color: var(--ak-color-text);
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────── */
+
+.app-shell__sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-5);
+  padding: var(--ak-space-5) var(--ak-space-3);
+  border-right: 1px solid var(--ak-color-divider);
+  background: var(--ak-color-surface);
+  overflow-y: auto;
+  z-index: var(--ak-z-raised);
+}
+
+.app-shell__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--ak-space-3);
+  padding: var(--ak-space-1) var(--ak-space-3);
+  min-height: 32px;
+}
+
+.app-shell__brand-mark {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--ak-color-brand-500), var(--ak-color-brand-700));
+  border-radius: var(--ak-radius-md);
+  color: #ffffff;
+  font-weight: var(--ak-weight-bold);
+  font-size: var(--ak-text-sm);
+  letter-spacing: var(--ak-tracking-tight);
+  flex-shrink: 0;
+  box-shadow: var(--ak-shadow-xs);
+}
+
+.app-shell__brand-name {
+  font-size: var(--ak-text-md);
+  font-weight: var(--ak-weight-semibold);
+  letter-spacing: var(--ak-tracking-tight);
+  color: var(--ak-color-text);
+}
+
+.app-shell__workspace {
+  display: flex;
+  align-items: center;
+  gap: var(--ak-space-2);
+  padding: var(--ak-space-2) var(--ak-space-3);
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-md);
+  background: var(--ak-color-surface-muted);
+  font-size: var(--ak-text-sm);
+  color: var(--ak-color-text);
+  min-width: 0;
+}
+
+.app-shell__workspace-name {
+  font-weight: var(--ak-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.app-shell__workspace-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--ak-radius-full);
+  background: var(--ak-color-success);
+  flex-shrink: 0;
+}
+
+.app-shell__nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-5);
+  flex: 1;
+  min-height: 0;
+}
+
+.app-shell__nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-1);
+}
+
+.app-shell__nav-group-label {
+  font-size: var(--ak-text-xs);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: var(--ak-tracking-wide);
+  padding: var(--ak-space-1) var(--ak-space-3);
+  margin: 0;
+}
+
+.app-shell__nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--ak-space-3);
+  padding: var(--ak-space-2) var(--ak-space-3);
+  border-radius: var(--ak-radius-md);
+  color: var(--ak-color-text-muted);
+  font-size: var(--ak-text-base);
+  font-weight: var(--ak-weight-medium);
+  text-decoration: none;
+  transition:
+    background-color var(--ak-motion-quick) var(--ak-ease-out),
+    color var(--ak-motion-quick) var(--ak-ease-out);
+  position: relative;
+}
+
+.app-shell__nav-link:hover {
+  background: var(--ak-color-surface-muted);
+  color: var(--ak-color-text);
+}
+
+.app-shell__nav-link:focus-visible {
+  outline: none;
+  box-shadow: var(--ak-focus-ring);
+}
+
+.app-shell__nav-link[aria-current='page'] {
+  background: var(--ak-color-brand-50);
+  color: var(--ak-color-brand-700);
+  font-weight: var(--ak-weight-semibold);
+}
+
+.app-shell__nav-link[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: calc(var(--ak-space-3) * -1);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  background: var(--ak-color-brand-600);
+  border-radius: var(--ak-radius-full);
+}
+
+.app-shell__nav-link svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.app-shell__nav-link-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-shell__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-1);
+  padding-top: var(--ak-space-3);
+  border-top: 1px solid var(--ak-color-divider);
+}
+
+/* ── Main column (topbar + content) ────────────────────────────────── */
+
+.app-shell__main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.app-shell__topbar {
+  position: sticky;
+  top: 0;
+  z-index: var(--ak-z-sticky);
+  display: flex;
+  align-items: center;
+  gap: var(--ak-space-4);
+  height: var(--ak-topbar-height);
+  padding: 0 var(--ak-space-7);
+  border-bottom: 1px solid var(--ak-color-divider);
+  background: color-mix(in srgb, var(--ak-color-surface) 84%, transparent);
+  backdrop-filter: saturate(180%) blur(8px);
+  -webkit-backdrop-filter: saturate(180%) blur(8px);
+}
+
+.app-shell__topbar-title {
+  font-size: var(--ak-text-md);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text);
+  letter-spacing: var(--ak-tracking-tight);
+  margin: 0;
+}
+
+.app-shell__topbar-spacer {
+  flex: 1;
+}
+
+.app-shell__topbar-search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-space-2);
+  height: 36px;
+  padding: 0 var(--ak-space-3);
+  border: 1px solid var(--ak-color-border);
+  border-radius: var(--ak-radius-md);
+  background: var(--ak-color-surface-muted);
+  color: var(--ak-color-text-faint);
+  font-size: var(--ak-text-sm);
+  min-width: 220px;
+  cursor: text;
+  transition:
+    border-color var(--ak-motion-quick) var(--ak-ease-out),
+    background-color var(--ak-motion-quick) var(--ak-ease-out);
+}
+
+.app-shell__topbar-search:hover {
+  border-color: var(--ak-color-border-strong);
+  background: var(--ak-color-surface);
+}
+
+.app-shell__topbar-search svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.app-shell__topbar-search kbd {
+  margin-left: auto;
+  font-family: var(--ak-font-mono);
+  font-size: 11px;
+  padding: 2px 6px;
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-border);
+  border-radius: var(--ak-radius-sm);
+  color: var(--ak-color-text-muted);
+  line-height: 1;
+}
+
+.app-shell__content {
+  flex: 1;
+  padding: var(--ak-space-7) var(--ak-space-8);
+  max-width: var(--ak-content-max-width);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.app-shell__footer-credit {
+  padding: var(--ak-space-4) var(--ak-space-8);
+  font-size: var(--ak-text-xs);
+  color: var(--ak-color-text-faint);
+  border-top: 1px solid var(--ak-color-divider);
+  background: var(--ak-color-surface);
+  text-align: right;
+}
+
+/* ── Rail mode (collapsed sidebar) — < 1024px ──────────────────────── */
+
+@media (max-width: 1023px) {
+  :root {
+    --ak-sidebar-width: 64px;
+  }
+
+  .app-shell__brand-name,
+  .app-shell__workspace,
+  .app-shell__nav-group-label,
+  .app-shell__nav-link-label,
+  .app-shell__footer {
+    display: none;
+  }
+
+  .app-shell__sidebar {
+    padding: var(--ak-space-5) var(--ak-space-2);
+    align-items: center;
+    gap: var(--ak-space-4);
+  }
+
+  .app-shell__brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app-shell__nav-group {
+    align-items: center;
+  }
+
+  .app-shell__nav-link {
+    justify-content: center;
+    padding: var(--ak-space-2);
+    width: 40px;
+    height: 40px;
+  }
+
+  .app-shell__nav-link[aria-current='page']::before {
+    display: none;
+  }
+
+  .app-shell__nav-link[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ak-color-brand-200);
+    border-radius: var(--ak-radius-md);
+    pointer-events: none;
+  }
+
+  .app-shell__topbar {
+    padding: 0 var(--ak-space-5);
+  }
+
+  .app-shell__topbar-search {
+    min-width: 0;
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .app-shell__topbar-search-text,
+  .app-shell__topbar-search kbd {
+    display: none;
+  }
+
+  .app-shell__content {
+    padding: var(--ak-space-6) var(--ak-space-5);
+  }
+}
+
+/* ── Modal-backdrop coexistence ────────────────────────────────────── */
+/* When a dialog is open, the topbar's backdrop-filter is below it. */
+
+.app-shell__main:has(.modal-backdrop) .app-shell__topbar {
+  z-index: var(--ak-z-base);
+}

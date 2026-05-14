@@ -1,51 +1,96 @@
+/* KPI hero strip for the dashboard. */
+
 .totals-card {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--ak-spacing-4);
-  padding: var(--ak-spacing-4);
-  background: var(--ak-color-surface-1);
-  border: 1px solid var(--ak-color-border);
-  border-radius: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ak-space-5);
+  margin-bottom: var(--ak-space-6);
 }
 
 .totals-card__item {
   display: flex;
   flex-direction: column;
-  gap: var(--ak-spacing-1);
+  gap: var(--ak-space-2);
+  padding: var(--ak-space-6);
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-xl);
+  transition:
+    border-color var(--ak-motion-base) var(--ak-ease-out),
+    box-shadow var(--ak-motion-base) var(--ak-ease-out),
+    transform var(--ak-motion-base) var(--ak-ease-out);
+}
+
+.totals-card__item:hover {
+  box-shadow: var(--ak-shadow-sm);
+  border-color: var(--ak-color-border);
+  transform: translateY(-1px);
 }
 
 .totals-card__label {
-  font-size: var(--ak-font-size-sm);
+  font-size: var(--ak-text-xs);
+  font-weight: var(--ak-weight-semibold);
   color: var(--ak-color-text-muted);
-  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--ak-tracking-wide);
 }
 
 .totals-card__value {
-  font-size: var(--ak-font-size-2xl);
-  font-weight: 700;
+  font-family: var(--ak-font-display);
+  font-size: var(--ak-text-4xl);
+  font-weight: var(--ak-weight-semibold);
+  line-height: var(--ak-leading-tight);
+  letter-spacing: var(--ak-tracking-tight);
   color: var(--ak-color-text);
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
-.totals-card__value--income {
-  color: var(--ak-color-success);
-}
+.totals-card__value--income,
 .totals-card__value--expense {
-  color: var(--ak-color-danger);
+  color: var(--ak-color-text);
 }
+
 .totals-card__value--net-positive {
   color: var(--ak-color-success);
 }
+
 .totals-card__value--net-negative {
   color: var(--ak-color-danger);
+}
+
+.totals-card__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-space-1);
+  font-size: var(--ak-text-xs);
+  font-weight: var(--ak-weight-semibold);
+  padding: 0 var(--ak-space-2);
+  height: 22px;
+  border-radius: var(--ak-radius-full);
+  width: fit-content;
+  background: var(--ak-color-surface-muted);
+  color: var(--ak-color-text-muted);
+}
+
+.totals-card__delta--up {
+  background: var(--ak-color-success-soft-bg);
+  color: var(--ak-color-success-soft-text);
+}
+
+.totals-card__delta--down {
+  background: var(--ak-color-danger-soft-bg);
+  color: var(--ak-color-danger-soft-text);
+}
+
+.totals-card__caption {
+  font-size: var(--ak-text-xs);
+  color: var(--ak-color-text-faint);
 }
 
 .totals-card__empty {
   grid-column: 1 / -1;
   text-align: center;
   color: var(--ak-color-text-muted);
-  font-style: italic;
-  padding: var(--ak-spacing-5) 0;
+  padding: var(--ak-space-9) 0;
+  font-size: var(--ak-text-base);
 }

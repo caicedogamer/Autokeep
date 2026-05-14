@@ -145,34 +145,84 @@ shortcut later will violate Constitution Principles II, III, and V.
 
 ---
 
-## Phase 5: User Story 3 — Import CSV/JSON with strict validation (Priority: P1)
+## Phase 5: User Story 3 — Import CSV/JSON with strict validation (Priority: P1) — SUPERSEDED
 
-**Goal**: an operator can import a CSV or JSON file, see a per-row validation report **before** any record is written, and choose to commit only the valid rows or cancel entirely. Structural failures touch zero records (FR-015, SC-004).
+> **Status: SUPERSEDED by Phase 5b** (T126–T145). The v1 fixed-header
+> importer below is preserved as history. **Do not re-execute these
+> tasks.** The flexible-import rewrite in Phase 5b reuses the file
+> picker, validation-report view, and progress UI (T066–T068, T071,
+> T072 fixtures) — those tasks are revisited in 5b rather than
+> rebuilt from scratch.
 
-**Independent Test**: import (a) a fully valid file, (b) a file with mixed valid/invalid rows, (c) a file with a wrong header / malformed JSON; verify the validation report and the partial/atomic commit behavior; verify no `FinancialRecord` is persisted from a structurally rejected file.
+**Original goal (v1)**: an operator can import a CSV or JSON file, see a per-row validation report **before** any record is written, and choose to commit only the valid rows or cancel entirely. Structural failures touch zero records (FR-015, SC-004).
 
-### Domain, schemas, worker for User Story 3
+**Original independent test**: import (a) a fully valid file, (b) a file with mixed valid/invalid rows, (c) a file with a wrong header / malformed JSON; verify the validation report and the partial/atomic commit behavior; verify no `FinancialRecord` is persisted from a structurally rejected file.
 
-- [X] T058 [P] [US3] Define `ImportBatch` and `ValidationReport` types in `src/modules/import/domain/types.ts` per [data-model.md](data-model.md)
-- [X] T059 [P] [US3] Implement the CSV import schema (Zod + structural header check) in `src/modules/import/domain/csv-schema.ts` exactly per [contracts/import-csv.schema.md](contracts/import-csv.schema.md); export the canonical reason codes and the structural reason codes as `as const` enums
-- [X] T060 [P] [US3] Implement the JSON import schema (Zod) in `src/modules/import/domain/json-schema.ts` exactly per [contracts/import-json.schema.md](contracts/import-json.schema.md); export reason codes the same way
-- [X] T061 [US3] Implement the import worker body in `src/core/workers/import.worker.ts`: receives `{ requestId, kind: 'csv' | 'json', fileBuffer, ctx }` where `ctx = { currency, currencyMinorUnits, existingCount }`; for CSV streams via PapaParse `worker: false` (the worker IS the worker — PapaParse runs synchronously here), validates each row against `csv-schema`; for JSON parses + validates against `json-schema`; posts a streamed sequence of `{ progress }` then a final `{ report, structuralOk }`; honors a cancel message between rows
-- [X] T062 [US3] Implement `ImportService` in `src/modules/import/services/import-service.ts`: orchestrates the worker; on `confirmCommit(report, mode: 'all-valid' | 'partial-up-to-cap')` writes `FinancialRecord`s through `RecordsService.create` (bulk, single payload write), creates an `ImportBatch` with `outcome: 'imported-valid' | 'cancelled' | 'rejected-structural'`; consults the capacity gate before commit and surfaces the partial-commit prompt at the cap (FR-041)
-- [X] T063 [US3] Write `src/modules/import/__tests__/csv-schema.pure.spec.ts` (Node env): table-driven cases covering every per-row reason code, every structural reason code, BOM handling, mixed line endings, RFC-4180 quoting, locale-mismatch decimal rejection
-- [X] T064 [US3] Write `src/modules/import/__tests__/json-schema.pure.spec.ts` (Node env): table-driven cases covering every per-row reason code, every structural reason code, schema-version mismatches, currency/minorUnits mismatches
-- [X] T065 [US3] Write `src/modules/import/__tests__/import-service.spec.ts`: structurally rejected file ⇒ `ImportBatch.outcome === 'rejected-structural'` AND zero new records (SC-004); mixed file with `confirmCommit('all-valid')` ⇒ exactly `validRows` records created, `invalidRows` reflected only in the report; `cancel` ⇒ no records, `outcome === 'cancelled'`; partial commit at the 12000-cap obeys FR-041
+### Domain, schemas, worker for User Story 3 — superseded
 
-### UI for User Story 3
+- [X] ~~T058~~ [P] [US3] Define `ImportBatch` and `ValidationReport` types in `src/modules/import/domain/types.ts` per [data-model.md](data-model.md) **— types are extended (not replaced) by T126**
+- [X] ~~T059~~ [P] [US3] Implement the CSV import schema (Zod + structural header check) in `src/modules/import/domain/csv-schema.ts` exactly per [contracts/import-csv.schema.md](contracts/import-csv.schema.md); export the canonical reason codes and the structural reason codes as `as const` enums **— replaced by T127–T131 (parsing + inference + validation stages)**
+- [X] ~~T060~~ [P] [US3] Implement the JSON import schema (Zod) in `src/modules/import/domain/json-schema.ts` exactly per [contracts/import-json.schema.md](contracts/import-json.schema.md); export reason codes the same way **— replaced by T128 (JSON parser) + T131 (validator)**
+- [X] ~~T061~~ [US3] Implement the import worker body in `src/core/workers/import.worker.ts` **— rewritten by T133 to orchestrate the 6-stage pipeline**
+- [X] ~~T062~~ [US3] Implement `ImportService` in `src/modules/import/services/import-service.ts` **— rewritten by T134 with the new pipeline events and the `MappingDecision` audit hook**
+- [X] ~~T063~~ [US3] Write `src/modules/import/__tests__/csv-schema.pure.spec.ts` **— replaced by T135 + T136**
+- [X] ~~T064~~ [US3] Write `src/modules/import/__tests__/json-schema.pure.spec.ts` **— replaced by T135 + T136**
+- [X] ~~T065~~ [US3] Write `src/modules/import/__tests__/import-service.spec.ts` **— replaced by T137**
 
-- [X] T066 [P] [US3] Implement the import wizard's file picker step in `src/modules/import/ui/file-picker.ts` and `src/modules/import/ui/file-picker.css`: drag-drop + native picker, accepts `.csv,.json,application/json,text/csv`, surfaces structural rejection inline (no records touched) per FR-015
-- [X] T067 [P] [US3] Implement the validation report view in `src/modules/import/ui/validation-report.ts` and `src/modules/import/ui/validation-report.css`: virtualized table of per-row results (status + reason codes mapped to Spanish messages from i18n), summary header (`Total / Válidas / Inválidas`), download-as-CSV action for the report itself, prominent confirm/cancel buttons
-- [X] T068 [P] [US3] Implement the import progress + cancel control in `src/modules/import/ui/import-progress.ts` and `src/modules/import/ui/import-progress.css`: streams `progress` events from `ImportService`; `Cancelar` button posts a cancel message to the worker before commit (FR-016)
-- [X] T069 [US3] Wire the import module's public surface in `src/modules/import/index.ts`: export `ImportService`, `mountImportView(container, deps)`, and the `import:*` event names
-- [X] T070 [US3] Register the import view with the router so `#/import` mounts the wizard
-- [X] T071 [US3] Add canonical fixtures under `tests/fixtures/`: `import-csv-valid.csv`, `import-csv-mixed.csv`, `import-csv-bad-header.csv`, `import-csv-bom-crlf.csv`, `import-json-valid.json`, `import-json-mixed.json`, `import-json-malformed.json`, `import-json-wrong-version.json` — used by the schema tests, the import-service tests, and the e2e import golden-path
-- [X] T072 [US3] Write the e2e import golden path in `tests/e2e/import-flow.spec.ts` (Playwright): drives the full UI for the four fixture cases above, asserts the records list reflects exactly the operator-confirmed rows for each case
+### UI for User Story 3 — superseded
 
-**Checkpoint**: User Stories 1, 2, AND 3 work independently. The MVP P1 slice is complete.
+- [X] ~~T066~~ [P] [US3] file-picker.ts/css **— retained, minor update in T140 to also accept `.tsv` and `.ndjson` extensions**
+- [X] ~~T067~~ [P] [US3] validation-report.ts/css **— retained; extended in T140 to surface the operator-confirmed mapping next to the row reasons**
+- [X] ~~T068~~ [P] [US3] import-progress.ts/css **— retained; extended in T140 to render per-stage progress (parse → infer → confirm → normalize → validate → commit)**
+- [X] ~~T069~~ [US3] import index.ts public surface **— rewritten by T141 to export the new pipeline events and `ColumnMapper` interface**
+- [X] ~~T070~~ [US3] Router registration **— retained; flexible-import wizard still mounts at `#/import`**
+- [X] ~~T071~~ [US3] Canonical fixtures **— retained for legacy regression; new heterogeneous fixtures land in T143**
+- [X] ~~T072~~ [US3] e2e import golden path **— replaced by T144 (`flexible-import.spec.ts`)**
+
+---
+
+## Phase 5b: User Story 3 v2 — Flexible Import (Priority: P1)
+
+**Goal**: an operator can import a CSV or JSON file of heterogeneous structure, see the inferred column-to-role mapping with confidence indicators, confirm or correct the mapping, then see a per-row validation report against the **normalized internal model** before any record is written, and choose to commit only the valid rows or cancel entirely. Parser-level failures touch zero records (FR-015, SC-004, SC-020).
+
+**Independent Test**: import (a) a file with canonical column names and order — mapping auto-confirms with no operator interaction; (b) a heterogeneous file with es/en column names in non-canonical order — preview shows inferred mapping + confidence, operator confirms; (c) a file with an ambiguous column pair (e.g., `Importe` and `Saldo` both numeric) — preview flags `AMBIGUOUS_ROLE` and operator picks; (d) a file missing a required role — confirm is blocked; (e) an unparseable file — parser-level rejection touches zero records. Verify in every case the records list and `ImportBatch.mappingDecision` reflect exactly the operator-confirmed mapping.
+
+### Domain types and pipeline stages
+
+- [ ] T126 [P] [US3v2] **Extend types** in `src/modules/import/domain/types.ts`: add `RawTable`, `RawTableMeta`, `ColumnInference`, `SemanticRole`, `ColumnMapping`, `MappingSource`, `MappingDecision`, `MappingWarning` (tagged union per [contracts/import-mapping.md](contracts/import-mapping.md) §4), `InferenceReport`, `NormalizedRow`; extend `ImportBatch` with `inferenceReport` + `mappingDecision` and bump `schemaVersion` to `2`; extend `FinancialRecord` with optional `extraMetadata: Record<string, string>`
+- [ ] T127 [P] [US3v2] **CSV parser** in `src/modules/import/domain/parsing/csv-parser.ts`: PapaParse wrapper with `delimiter: ""` (auto-detect per R16), BOM handling, line-ending detection, synthetic-header detection (≥ 60% data-looking cells in row 1); output `RawTable`; no semantic assumptions
+- [ ] T128 [P] [US3v2] **JSON parser** in `src/modules/import/domain/parsing/json-parser.ts`: detect array | wrapped | NDJSON shape per R17 + [contracts/import-json.schema.md](contracts/import-json.schema.md); union-of-keys header synthesis; stringify every cell; emit `meta.jsonShape`, `meta.wrapperKey`, `meta.wrapperFields`
+- [ ] T129 [US3v2] **Inference heuristics** in `src/modules/import/domain/inference/heuristics.ts`: bilingual (es/en) header regex table per [contracts/import-csv.schema.md](contracts/import-csv.schema.md) §Stage 2; value-pattern detectors (date / number / enum / boolean / string); per-column sample (≤ 200 rows); composite confidence `0.6 * headerScore + 0.4 * valueScore`; ambiguity detection (`AMBIGUOUS_ROLE` when Δ < 0.1); date and decimal-separator ambiguity detectors
+- [ ] T130 [US3v2] **HeuristicColumnMapper** in `src/modules/import/domain/inference/heuristic-column-mapper.ts`: implements the `ColumnMapper` interface from [contracts/import-mapping.md](contracts/import-mapping.md) §6; consumes `RawTable` + `InferenceContext`, produces `InferenceReport`; pure, deterministic
+- [ ] T131 [US3v2] **Normalizer** in `src/modules/import/domain/normalization/normalizer.ts`: pure function `normalize(table, decision, ctx): NormalizedRow[]`; routes cells to semantic-role slots without coercion; preserves unmapped columns under `extraMetadata`; applies operator-confirmed `dateFormatPerColumn` / `decimalSeparatorPerColumn` / `amountConvention` / `typeCanonicalization`
+- [ ] T132 [US3v2] **Adaptive validator** in `src/modules/import/domain/validation/validator.ts`: Zod schemas applied to `NormalizedRow[]`; emits the full row-error catalog from [contracts/import-csv.schema.md](contracts/import-csv.schema.md) §Stage 5 (including new `MISSING_REQUIRED_ROLE_AFTER_MAPPING`, `METADATA_KEY_TOO_LONG`, `METADATA_VALUE_TOO_LONG`, `METADATA_TOO_MANY_FIELDS`); aggregates multi-error rows
+
+### Worker orchestration and service
+
+- [ ] T133 [US3v2] **Rewrite import worker** in `src/core/workers/import.worker.ts`: messages `{kind: 'parse', fileBuffer}` → `RawTable`; `{kind: 'infer', table, ctx}` → `InferenceReport`; `{kind: 'normalize+validate', table, decision, ctx}` → streamed per-row results + final `ValidationReport`; cancel honored between stages and between rows; preserves the typed-message contract in `src/core/workers/messages.ts`
+- [ ] T134 [US3v2] **Rewrite `ImportService`** in `src/modules/import/services/import-pipeline.ts`: orchestrates the 6-stage pipeline; emits `import:parsed`, `import:inferred`, `import:mapping-confirmed`, `import:validated`, `import:committed`, `import:cancelled`; on commit persists `FinancialRecord[]` (with `extraMetadata`) via `RecordsService.create` AND persists `ImportBatch` carrying `mappingDecision` + `inferenceReport` for audit; consults the capacity gate before commit (FR-041)
+
+### Tests
+
+- [ ] T135 [P] [US3v2] **Pure tests for parsers + inferrer + normalizer + validator** under `src/modules/import/__tests__/`: one `*.pure.spec.ts` per stage; table-driven cases covering every error code, every warning code, ambiguity detection, synthetic-header generation, wrapped-JSON detection, NDJSON, mixed-type column edge cases
+- [ ] T136 [P] [US3v2] **Mapping accuracy benchmark** in `src/modules/import/__tests__/heuristic-column-mapper.bench.spec.ts`: load the 20-file heterogeneous reference set from `tests/fixtures/heterogeneous/` (created in T143), run `HeuristicColumnMapper.infer()` on each, compare against the paired `expected-mapping.json`, assert overall auto-mapping accuracy ≥ 80% per **SC-017**; fail with a per-file breakdown when below threshold
+- [ ] T137 [US3v2] **Service-level tests** in `src/modules/import/__tests__/import-pipeline.spec.ts` (jsdom): parser-level rejection ⇒ `ImportBatch.outcome === 'rejected-structural'` AND zero new records (SC-004, SC-020); auto-confirmed mapping path ⇒ records created and `mappingDecision.source === 'auto'`; manual-override path ⇒ `source === 'mixed'`; missing required role after confirm ⇒ commit blocked with `MISSING_REQUIRED_ROLE`; `cancel` after preview ⇒ `outcome === 'cancelled'` + `mappingDecision` retained for audit
+- [ ] T138 [US3v2] **Performance benchmark** in `tests/e2e/import-inference-perf.spec.ts` (Playwright, Chromium): synthesize a 5,000-row × 20-column CSV; measure p95 of `parse + infer + preview-rendered` ≤ **1.5 s** per **SC-018**; assert the cancel button remains responsive at every stage
+
+### UI
+
+- [ ] T139 [US3v2] **MappingPreview** in `src/modules/import/ui/mapping-preview.ts` + `.css`: virtualized first-20-rows preview, per-column header showing `inferredRole` + confidence chip (Alta / Media / Baja, never raw decimals) + role-override dropdown bound to `SemanticRole | 'ignore' | 'metadata'`; warning badges (`AMBIGUOUS_ROLE`, `LOW_CONFIDENCE`, `MIXED_TYPE_COLUMN`, `MISSING_REQUIRED_ROLE`, `CURRENCY_DIFFERS_FROM_WORKSPACE`, ambiguity badges); ARIA live region announces role changes (FR-037); confirm button disabled while any non-resolvable warning remains
+- [ ] T140 [US3v2] **Update file-picker / validation-report / import-progress**: extend the file picker (T066) to also accept `.tsv` and `.ndjson`; extend the validation-report view (T067) to render the operator-confirmed mapping next to row reasons (so the report is interpretable in isolation, FR-013); extend the progress UI (T068) to show per-stage progress (parse → infer → confirm → normalize → validate → commit)
+- [ ] T141 [US3v2] **i18n strings** in `src/core/i18n/es.ts`: Spanish copy for every new warning code, every new error code (`MISSING_REQUIRED_ROLE_AFTER_MAPPING`, `METADATA_*`), confidence levels (Alta / Media / Baja), per-stage progress labels, and the operator-facing names of every `SemanticRole`
+- [ ] T142 [US3v2] **Public surface** in `src/modules/import/index.ts`: export the `ColumnMapper` interface (so post-MVP AI variants can be wired in), the new `import:*` event names, the extended `ImportService`, and `mountImportView(container, deps)`
+
+### Fixtures and e2e
+
+- [ ] T143 [P] [US3v2] **Heterogeneous fixtures** under `tests/fixtures/heterogeneous/`: 20 paired files covering — Argentine bank statement (semicolon, DD/MM, decimal-comma); Mexican bank statement (comma, DD/MM, decimal-dot); US bank statement (comma, MM/DD, decimal-dot); ERP export wrapped JSON under `movements`; ERP export with es column names (`fecha/monto/rubro/...`); NDJSON export; CSV with synthetic header (no header row); CSV with extra metadata columns (Saldo, Referencia); CSV with mixed-type column; CSV with non-canonical type vocabulary (`I/E`, `CR/DB`); JSON with integer minor units; JSON with major-decimal amounts; etc. Each file paired with `expected-mapping.json` describing the correct `MappingDecision`
+- [ ] T144 [US3v2] **e2e flexible-import** in `tests/e2e/flexible-import.spec.ts` (Playwright): drives the full UI for the 5 acceptance scenarios from the spec's US3 (auto-confirm, manual mapping, ambiguity disambiguation, missing required role, parser rejection); plus the round-trip (export → re-import) case verifying `extraMetadata` survives per **SC-019**; plus WCAG sweep of the mapping-preview screen via `@axe-core/playwright`
+- [ ] T145 [US3v2] **v1 → v2 migration** in `src/core/storage/encrypted-store.ts` (per [data-model.md](data-model.md) §v1 → v2 migration): read v1 payloads, populate `extraMetadata: {}` on each record, synthesize `inferenceReport` + `mappingDecision` for each historical `ImportBatch` (`source: 'auto'`, mapping derived from the canonical v1 column order, `confirmedAt = importedAt`); lazy write-back on first mutation; cover with `src/core/storage/__tests__/migration-v1-to-v2.pure.spec.ts`
+
+**Checkpoint**: User Story 3 v2 is fully functional. Auto-mapping accuracy hits SC-017 on the reference set, inference + preview meets SC-018, parser-level rejection is the only file-level rejection cause (SC-020), and `extraMetadata` round-trips through export/re-import (SC-019). The MVP P1 slice is complete.
 
 ---
 

@@ -31,9 +31,20 @@ true`, `exactOptionalPropertyTypes: true`.
 **Primary Dependencies**:
 - **Build/runtime**: Vite (dev server, bundler, worker bundling).
 - **Validation**: Zod (TypeScript-first schema validation; tree-shakable;
-  no heavy runtime).
-- **CSV**: PapaParse (battle-tested CSV parser; supports streaming + workers;
-  small footprint).
+  no heavy runtime). Used for the **normalized-row** schema after
+  operator-confirmed mapping (FR-012); not used to enforce a fixed file
+  header shape.
+- **CSV**: PapaParse (battle-tested CSV parser; supports streaming +
+  workers; small footprint). Used in **delimiter auto-detect** mode
+  (`delimiter: ""`) so heterogeneous separators (comma / semicolon / tab)
+  are handled without configuration. Justification in `research.md` R16.
+- **Column inference**: **TypeScript-only heuristics**, no added
+  dependency. Header-name regex (bilingual es/en) + value-pattern
+  sampling produce a `ColumnInference` per column. Encapsulated behind
+  the `ColumnMapper` interface so a future AI strategy can replace it
+  without touching parser, normalizer, or validator (FR-048). Justified
+  in `research.md` R15 against fuzzy-matching libraries and bundled
+  ML models.
 - **Charts**: Chart.js with the Canvas renderer (no React dep, accessible
   with manual ARIA labelling on the wrapping figure).
 - **Crypto**: Web Crypto API (AES-256-GCM, PBKDF2-SHA-256). Argon2id is
@@ -69,6 +80,10 @@ scope per FR-031 and the brief).
 - p95 keystroke-to-echo on the search input ≤ **50 ms** (SC-002).
 - Import + validation of a 5,000-row file: UI remains interactive
   throughout, with cancel available before commit (SC-003).
+- Inference + mapping preview of a 5,000-row × up-to-20-column file:
+  p95 ≤ **1.5 s** on the reference profile, operator can cancel at any
+  point (SC-018). Inference samples the first 200 rows only and runs
+  inside `import.worker.ts`.
 - Argon2id passphrase derivation (workspace unlock) target ≤ **750 ms** on
   the reference profile; runs in a dedicated worker so the main thread is
   not blocked (Principle V).
@@ -101,9 +116,9 @@ Constitution: `.specify/memory/constitution.md` v1.0.0.
 |---|---|---|---|
 | I  | SPA Modular y Desacoplada | ✅ | TS strict; per-module folders under `src/modules/<module>/`; each module exports a typed public surface (`index.ts`); cross-module communication via DTOs and a typed event bus only. |
 | II | Separación Lógica / Presentación | ✅ | Business logic in `src/modules/<module>/{domain,services}` with **zero** DOM imports; UI in `src/modules/<module>/ui` consumes domain via interfaces; `StorageAdapter` interface mediates every persistence call so the future REST swap is localized. |
-| III | Persistencia Local Primero (NON-NEGOTIABLE) | ✅ | Only `LocalStorageAdapter` implements `StorageAdapter`; payloads are versioned (`schemaVersion`); no backend, IndexedDB, or service worker introduced. |
+| III | Persistencia Local Primero (NON-NEGOTIABLE) | ✅ | Only `LocalStorageAdapter` implements `StorageAdapter` for financial data; payloads are versioned (`schemaVersion`); no backend, IndexedDB, or service worker introduced. **Sole documented exception**: `src/core/theme/` persists the non-secret visual-theme preference (`'system' \| 'light' \| 'dark'`) under `autokeep:theme` — required because the theme must apply on the unlock screen before any encrypted blob exists (`research.md` R18). The exception is enforced by an ESLint allow-list pinned to `src/core/theme/**` and `src/core/storage/**` only. |
 | IV | CSS Puro y Estilos Modulares (NON-NEGOTIABLE) | ✅ | Plain CSS files co-located with each module under `ui/`; BEM naming; only `src/styles/tokens.css` and `src/styles/reset.css` are global. No CSS framework added. |
-| V  | Validación de Datos y Procesamiento No-Bloqueante (NON-NEGOTIABLE) | ✅ | Every CSV/JSON ingress validated by a Zod schema before any write (FR-012, FR-015); CSV parsing in a PapaParse worker; validation, filtering, and Argon2 KDF in dedicated `Worker` modules. UI remains interactive (SC-002, SC-003). |
+| V  | Validación de Datos y Procesamiento No-Bloqueante (NON-NEGOTIABLE) | ✅ | Every CSV/JSON ingress validated **adaptively against the normalized model after operator-confirmed mapping** before any write (FR-012, FR-015, FR-043, FR-045). Parsing, inference, mapping confirmation, normalization, and validation each run as a separate pipeline stage; the heavy stages (parse, inference, validate) run inside `import.worker.ts`. Filtering and Argon2 KDF run in their own dedicated `Worker` modules. UI remains interactive (SC-002, SC-003, SC-018). |
 | VI | Calidad de Código, Tipado y Preparación para Pruebas | ✅ | TypeScript strict; ESLint (typescript-eslint, eslint-plugin-import, eslint-plugin-jsdoc); Prettier; pure-function business logic injected with adapters; Vitest scaffolded from day one. |
 | VII | Justificación Tecnológica Obligatoria | ✅ | Each dependency justified inline in **Technical Context** above against perf/maintainability/scalability and against a simpler alternative. Running tally is preserved in `research.md` so reviewers can reproduce the rationale. |
 
@@ -166,6 +181,9 @@ autoKeep/
 │   │   │   └── format.ts                 # locale-aware date/number formatters (FR-039)
 │   │   ├── router/
 │   │   │   └── router.ts                 # tiny hash-based SPA router
+│   │   ├── theme/                        # Theme preference (light/dark/system)
+│   │   │   ├── theme-service.ts          # Sole documented exception to Principle III (research.md R18)
+│   │   │   └── index.ts                  # Public surface
 │   │   └── result.ts                     # Result<T, E> for explicit error handling
 │   ├── modules/
 │   │   ├── records/                      # US1
@@ -178,10 +196,26 @@ autoKeep/
 │   │   │   ├── services/                 # filter coordinator (delegates to filter.worker)
 │   │   │   ├── ui/                       # filter bar, active-filters chip strip
 │   │   │   └── __tests__/
-│   │   ├── import/                       # US3
-│   │   │   ├── domain/                   # ImportBatch, ValidationReport, schemas (Zod)
-│   │   │   ├── services/                 # orchestration around import.worker
-│   │   │   ├── ui/                       # file picker, validation report view, confirm/cancel
+│   │   ├── import/                       # US3 — flexible import pipeline
+│   │   │   ├── domain/
+│   │   │   │   ├── parsing/              # CSV (PapaParse, delimiter auto-detect) and JSON
+│   │   │   │   │                         # parsers → RawTable; NO semantic assumptions
+│   │   │   │   ├── inference/            # ColumnMapper interface + HeuristicColumnMapper
+│   │   │   │   │                         # (bilingual header regex + value-pattern sampling)
+│   │   │   │   ├── normalization/        # RawTable + MappingDecision → FinancialRecord[]
+│   │   │   │   │                         # + extraMetadata for unmapped columns
+│   │   │   │   ├── validation/           # Zod schemas applied AFTER normalization
+│   │   │   │   └── types.ts              # RawTable, ColumnInference, ColumnMapping,
+│   │   │   │                             # MappingDecision, MappingWarning, ImportBatch,
+│   │   │   │                             # ValidationReport
+│   │   │   ├── services/
+│   │   │   │   └── import-pipeline.ts    # orchestrates the 6-stage pipeline via worker
+│   │   │   ├── ui/
+│   │   │   │   ├── file-picker.ts        # drag-drop + native picker
+│   │   │   │   ├── mapping-preview.ts    # NEW: preview + per-column role dropdowns +
+│   │   │   │   │                         # confidence indicators + warning badges
+│   │   │   │   ├── validation-report.ts  # per-row results
+│   │   │   │   └── import-progress.ts    # progress + cancel
 │   │   │   └── __tests__/
 │   │   ├── export/                       # US4
 │   │   │   ├── domain/                   # export schemas (CSV columns, JSON shape, schemaVersion)
@@ -204,8 +238,10 @@ autoKeep/
 │   │       ├── ui/
 │   │       └── __tests__/
 │   └── styles/
-│       ├── tokens.css                    # design tokens: colors, spacing, type
-│       └── reset.css                     # minimal reset
+│       ├── tokens.css                    # design tokens: palette, type, spacing, radius, shadows, motion, z
+│       ├── reset.css                     # minimal reset + scrollbar + selection
+│       ├── components.css                # shared classes: btn, input, card, badge, kpi, table, alert, ...
+│       └── shell.css                     # app-shell layout (sidebar + topbar + content)
 ├── tests/
 │   ├── e2e/                              # Playwright golden-paths per user story + WCAG sweep
 │   └── fixtures/                         # canonical CSV/JSON files (valid, mixed, malformed)
@@ -259,8 +295,12 @@ After Phase 1 design (data model, contracts, quickstart):
   tokens + reset; module CSS is BEM-scoped and co-located in `ui/`.
   **Pass.**
 - **Principle V:** every CSV/JSON contract requires schema validation
-  before commit; `import.worker.ts`, `filter.worker.ts`, and
-  `kdf.worker.ts` keep heavy work off the main thread. **Pass.**
+  before commit. The new pipeline (parse → infer → confirm → normalize
+  → validate → persist) preserves this — validation now runs against the
+  normalized model after operator-confirmed mapping, not against a fixed
+  header (FR-012, FR-043, FR-045). `import.worker.ts`, `filter.worker.ts`,
+  and `kdf.worker.ts` keep heavy work off the main thread; inference and
+  validation are co-located inside `import.worker.ts`. **Pass.**
 - **Principle VI:** all chosen libraries are TS-first or ship types;
   `Result<T, E>` in `core/result.ts` enforces explicit error handling at
   module boundaries; Vitest is wired before any feature work.

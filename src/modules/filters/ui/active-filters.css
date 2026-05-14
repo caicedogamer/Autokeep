@@ -2,80 +2,91 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--ak-spacing-2);
-  padding: var(--ak-spacing-2) var(--ak-spacing-4);
+  gap: var(--ak-space-2);
+  padding: var(--ak-space-3) 0;
   min-height: 2.5rem;
 }
 
 .filter-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ak-spacing-2);
+  gap: var(--ak-space-2);
   flex: 1;
 }
 
 .filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--ak-spacing-1);
-  padding: var(--ak-spacing-1) var(--ak-spacing-2) var(--ak-spacing-1) var(--ak-spacing-3);
-  background: var(--ak-color-surface-2);
-  border: 1px solid var(--ak-color-border);
-  border-radius: 20px;
-  font-size: var(--ak-font-size-sm);
-  color: var(--ak-color-text);
+  gap: var(--ak-space-2);
+  height: 28px;
+  padding: 0 var(--ak-space-1) 0 var(--ak-space-3);
+  background: var(--ak-color-brand-50);
+  color: var(--ak-color-brand-700);
+  border: 1px solid transparent;
+  border-radius: var(--ak-radius-full);
+  font-size: var(--ak-text-sm);
+  font-weight: var(--ak-weight-medium);
   line-height: 1;
+  transition:
+    border-color var(--ak-motion-quick) var(--ak-ease-out),
+    background-color var(--ak-motion-quick) var(--ak-ease-out);
+}
+
+.filter-chip:hover {
+  border-color: var(--ak-color-brand-200);
 }
 
 .filter-chip button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 20px;
+  height: 20px;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--ak-radius-full);
   background: transparent;
-  color: var(--ak-color-text-muted);
+  color: var(--ak-color-brand-700);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: var(--ak-text-sm);
   line-height: 1;
   padding: 0;
   transition:
-    background 0.15s,
-    color 0.15s;
+    background-color var(--ak-motion-quick) var(--ak-ease-out),
+    color var(--ak-motion-quick) var(--ak-ease-out);
 }
 
 .filter-chip button:hover {
-  background: var(--ak-color-danger);
-  color: #ffffff;
+  background: var(--ak-color-danger-soft-bg);
+  color: var(--ak-color-danger);
 }
 
 .filter-chip button:focus-visible {
-  outline: 3px solid var(--ak-color-focus);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: var(--ak-focus-ring);
 }
 
 .filter-clear-all {
-  padding: var(--ak-spacing-1) var(--ak-spacing-3);
-  border: 1px solid var(--ak-color-border);
-  border-radius: var(--ak-radius-sm);
+  height: 28px;
+  padding: 0 var(--ak-space-3);
+  border: 1px solid transparent;
+  border-radius: var(--ak-radius-md);
   background: transparent;
   color: var(--ak-color-text-muted);
-  font-size: var(--ak-font-size-sm);
+  font-size: var(--ak-text-sm);
+  font-weight: var(--ak-weight-medium);
   cursor: pointer;
   white-space: nowrap;
   transition:
-    background 0.15s,
-    color 0.15s;
+    background-color var(--ak-motion-quick) var(--ak-ease-out),
+    color var(--ak-motion-quick) var(--ak-ease-out);
 }
 
 .filter-clear-all:hover {
-  background: var(--ak-color-surface-2);
+  background: var(--ak-color-surface-muted);
   color: var(--ak-color-text);
 }
 
 .filter-clear-all:focus-visible {
-  outline: 3px solid var(--ak-color-focus);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--ak-focus-ring);
 }

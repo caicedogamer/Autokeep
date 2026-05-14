@@ -1,0 +1,213 @@
+/*
+ * Mapping preview — flexible import US3v2.
+ *
+ * Renders the inferred column-to-role mapping (see contracts/import-mapping.md)
+ * over the first ~20 rows of the parsed file. Each column header shows
+ * its inferred role, confidence chip, and a dropdown to override the
+ * role. Warnings bubble up as a stack of .alert blocks above the table.
+ *
+ * Implementation note: this CSS ships ahead of its TypeScript component
+ * (T139 in tasks.md) so the design system is locked in. The component
+ * will consume these class names verbatim.
+ */
+
+.mapping-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-4);
+  padding: var(--ak-space-5) 0;
+}
+
+.mapping-preview__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-1);
+}
+
+.mapping-preview__title {
+  font-size: var(--ak-text-xl);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text);
+  letter-spacing: var(--ak-tracking-tight);
+  margin: 0;
+}
+
+.mapping-preview__subtitle {
+  font-size: var(--ak-text-base);
+  color: var(--ak-color-text-muted);
+}
+
+.mapping-preview__warnings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-2);
+}
+
+.mapping-preview__table-wrapper {
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-xl);
+  background: var(--ak-color-surface);
+  overflow: auto;
+  max-height: 480px;
+}
+
+.mapping-preview__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--ak-text-base);
+}
+
+.mapping-preview__col-header {
+  padding: var(--ak-space-4);
+  background: var(--ak-color-surface);
+  border-bottom: 1px solid var(--ak-color-border);
+  vertical-align: top;
+  min-width: 180px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.mapping-preview__col-header-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-2);
+  align-items: flex-start;
+}
+
+.mapping-preview__col-name {
+  font-size: var(--ak-text-xs);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ak-tracking-wide);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mapping-preview__confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-space-1);
+  height: 22px;
+  padding: 0 var(--ak-space-2);
+  border-radius: var(--ak-radius-full);
+  font-size: var(--ak-text-xs);
+  font-weight: var(--ak-weight-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mapping-preview__confidence--high {
+  background: var(--ak-color-success-soft-bg);
+  color: var(--ak-color-success-soft-text);
+}
+
+.mapping-preview__confidence--medium {
+  background: var(--ak-color-warning-soft-bg);
+  color: var(--ak-color-warning-soft-text);
+}
+
+.mapping-preview__confidence--low {
+  background: var(--ak-color-danger-soft-bg);
+  color: var(--ak-color-danger-soft-text);
+}
+
+.mapping-preview__role-select {
+  width: 100%;
+  height: var(--ak-control-height-sm);
+  padding: 0 var(--ak-space-3);
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-border);
+  border-radius: var(--ak-radius-md);
+  color: var(--ak-color-text);
+  font-size: var(--ak-text-sm);
+  font-weight: var(--ak-weight-medium);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--ak-space-3) center;
+  padding-right: var(--ak-space-7);
+  transition:
+    border-color var(--ak-motion-quick) var(--ak-ease-out),
+    box-shadow var(--ak-motion-quick) var(--ak-ease-out);
+}
+
+.mapping-preview__role-select:hover {
+  border-color: var(--ak-color-border-strong);
+}
+
+.mapping-preview__role-select:focus {
+  outline: none;
+  border-color: var(--ak-color-brand-500);
+  box-shadow: var(--ak-focus-ring);
+}
+
+.mapping-preview__role-select--metadata {
+  color: var(--ak-color-text-muted);
+}
+
+.mapping-preview__role-select--ignore {
+  color: var(--ak-color-text-faint);
+}
+
+.mapping-preview__warning-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--ak-radius-full);
+  background: var(--ak-color-warning);
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: var(--ak-space-1);
+}
+
+.mapping-preview__data-cell {
+  padding: var(--ak-space-2) var(--ak-space-4);
+  border-bottom: 1px solid var(--ak-color-divider);
+  font-size: var(--ak-text-sm);
+  color: var(--ak-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.mapping-preview__data-cell--numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.mapping-preview__data-cell--metadata {
+  color: var(--ak-color-text-muted);
+  font-style: italic;
+}
+
+.mapping-preview__row:hover .mapping-preview__data-cell {
+  background: var(--ak-color-surface-muted);
+}
+
+.mapping-preview__row:last-child .mapping-preview__data-cell {
+  border-bottom: none;
+}
+
+.mapping-preview__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ak-space-3);
+  padding-top: var(--ak-space-3);
+  flex-wrap: wrap;
+}
+
+.mapping-preview__footer-info {
+  font-size: var(--ak-text-sm);
+  color: var(--ak-color-text-muted);
+}
+
+.mapping-preview__footer-actions {
+  display: flex;
+  gap: var(--ak-space-3);
+}

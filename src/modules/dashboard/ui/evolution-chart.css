@@ -1,20 +1,37 @@
 .evolution-chart {
-  padding: var(--ak-spacing-4);
-  background: var(--ak-color-surface-1);
-  border: 1px solid var(--ak-color-border);
-  border-radius: 8px;
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-xl);
+  padding: var(--ak-space-6);
+  box-shadow: var(--ak-shadow-xs);
+  margin-bottom: var(--ak-space-5);
+}
+
+.evolution-chart__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ak-space-3);
+  margin-bottom: var(--ak-space-4);
 }
 
 .evolution-chart__title {
-  font-size: var(--ak-font-size-base);
-  font-weight: 600;
+  font-size: var(--ak-text-lg);
+  font-weight: var(--ak-weight-semibold);
   color: var(--ak-color-text);
-  margin: 0 0 var(--ak-spacing-3);
+  letter-spacing: var(--ak-tracking-tight);
+  margin: 0;
+}
+
+.evolution-chart__subtitle {
+  font-size: var(--ak-text-sm);
+  color: var(--ak-color-text-muted);
+  margin: var(--ak-space-1) 0 0;
 }
 
 .evolution-chart__canvas-wrap {
   position: relative;
-  height: 240px;
+  height: 280px;
 }
 
 .evolution-chart__canvas-wrap canvas {
@@ -26,12 +43,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 200px;
+  height: 220px;
   color: var(--ak-color-text-muted);
-  font-style: italic;
+  font-size: var(--ak-text-base);
 }
 
-/* Visually-hidden accessible table (FR-037) */
 .evolution-chart__sr-table {
   position: absolute;
   width: 1px;

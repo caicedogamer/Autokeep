@@ -89,14 +89,14 @@ module.exports = {
      */
     {
       files: ['src/**/*.ts'],
-      excludedFiles: ['src/core/storage/**', 'src/**/__tests__/**'],
+      excludedFiles: ['src/core/storage/**', 'src/core/theme/**', 'src/**/__tests__/**'],
       rules: {
         'no-restricted-globals': [
           'error',
           {
             name: 'localStorage',
             message:
-              'Direct localStorage access is banned outside src/core/storage/**. Use StorageAdapter (Constitution Principle III).',
+              'Direct localStorage access is banned outside src/core/storage/**. Use StorageAdapter (Constitution Principle III). Sole documented exception: src/core/theme/** (non-secret, non-financial visual preference — see research.md R18).',
           },
           {
             name: 'sessionStorage',
@@ -125,6 +125,7 @@ module.exports = {
         'src/core/storage/encrypted-store.ts',
         'src/core/crypto/**',
         'src/core/workers/**',
+        'src/core/theme/**',
       ],
       rules: {
         'no-restricted-globals': [

@@ -12,9 +12,14 @@ Persistence rules are described in terms of the `StorageAdapter` contract;
 the on-disk shape is the encrypted blob defined in
 [contracts/storage-adapter.md](contracts/storage-adapter.md).
 
-The current persisted-payload `schemaVersion` is **`1`**. Every persisted
+The current persisted-payload `schemaVersion` is **`2`**. Every persisted
 record and every export carries this version (FR-005, FR-019). Migrations
-between versions are an explicit concern of `core/storage/encrypted-store.ts`.
+between versions are an explicit concern of `core/storage/encrypted-store.ts`;
+the v1 → v2 migration adds the optional `FinancialRecord.extraMetadata`
+field (defaulted to `{}` when reading v1 payloads), extends `ImportBatch`
+with `mappingDecision` and `inferenceReport` (defaulted to a synthetic
+"legacy fixed-header" decision on v1 reads), and bumps every entity's
+`schemaVersion` field on write.
 
 ---
 
@@ -52,7 +57,7 @@ encrypted blob.
 | `kdf` | `KdfDescriptor` | yes | `{ name: "argon2id" \| "pbkdf2-sha256", salt: base64, params: ... }`. Recorded so `unlock` can reproduce the derivation. |
 | `createdAt` | `IsoDateTime` | yes | |
 | `updatedAt` | `IsoDateTime` | yes | |
-| `schemaVersion` | `1` | yes | |
+| `schemaVersion` | `2` | yes | |
 
 ### Invariants
 
@@ -83,9 +88,10 @@ A single income or expense event (spec: *Financial Record*).
 | `source` | `"manual" \| "import"` | yes | Derived at creation; never edited. |
 | `importBatchId` | `Id` | no | Set iff `source === "import"`; FK → `ImportBatch.id`. |
 | `version` | `number` (positive integer) | yes | **Optimistic-concurrency token (FR-036)**. Incremented on every successful update. |
+| `extraMetadata` | `Record<string, string>` | no | Preserved from unmapped columns during flexible import (FR-044). Defaults to `{}`. Per-record limits: ≤ 10 keys, each key ≤ 60 chars, each value ≤ 200 chars (enforced at validation; rows exceeding the limits are rejected with `METADATA_*` reason codes per [import-csv.schema.md](../contracts/import-csv.schema.md)). |
 | `createdAt` | `IsoDateTime` | yes | |
 | `updatedAt` | `IsoDateTime` | yes | Equals `createdAt` on creation. |
-| `schemaVersion` | `1` | yes | |
+| `schemaVersion` | `2` | yes | Records persisted under v1 (without `extraMetadata`) are migrated on read to `extraMetadata: {}`. |
 
 ### Invariants & validation rules
 
@@ -98,6 +104,10 @@ A single income or expense event (spec: *Financial Record*).
   `Counterparty`.
 - `date` MUST be a valid calendar date; future dates are allowed (an
   operator may pre-record a scheduled invoice).
+- `extraMetadata` keys MUST be unique within a record and MUST NOT shadow
+  any canonical field name (`date`, `type`, `amount`, `category`,
+  `description`, `counterparty`, `currency`, `id`, `version`,
+  `schemaVersion`, `createdAt`, `updatedAt`, `source`, `importBatchId`).
 - `(date, amount, type, description, counterpartyId)` is **NOT** required
   to be unique — duplicates are detected by the AI subsystem (US6) and the
   import flow (US3 edge case "Duplicate detection on import"), not the
@@ -132,7 +142,7 @@ A label used to classify records.
 | `learnedFromAi` | `boolean` | yes | `true` if the category was first introduced through an AI-suggested record. Default `false`. |
 | `createdAt` | `IsoDateTime` | yes | |
 | `updatedAt` | `IsoDateTime` | yes | |
-| `schemaVersion` | `1` | yes | |
+| `schemaVersion` | `2` | yes | |
 
 ### Invariants
 
@@ -155,7 +165,7 @@ The other side of a transaction (supplier or client).
 | `aliases` | `string[]` | yes | 0–10 aliases; each 1–120 chars. Used for free-text search and AI suggestion matching. |
 | `createdAt` | `IsoDateTime` | yes | |
 | `updatedAt` | `IsoDateTime` | yes | |
-| `schemaVersion` | `1` | yes | |
+| `schemaVersion` | `2` | yes | |
 
 ### Invariants
 
@@ -180,18 +190,127 @@ Persistent record of one import operation (spec: *Import Batch*).
 | `totalRows` | `number` (≥ 0) | yes | |
 | `validRows` | `number` (≥ 0) | yes | |
 | `invalidRows` | `number` (≥ 0) | yes | |
-| `outcome` | `"imported-valid" \| "cancelled" \| "rejected-structural"` | yes | `rejected-structural` for files that failed structural validation per FR-015 (no rows touched). |
+| `outcome` | `"imported-valid" \| "cancelled" \| "rejected-structural"` | yes | `rejected-structural` for files that failed **parser-level** validation per FR-015 (no rows touched). Header / mapping mismatches are NOT structural rejections in v2. |
 | `errorReportRef` | `string` | no | Identifier (or inline payload up to a small cap) for the per-row report; report payload itself is not persisted long-term beyond the operator's session unless they explicitly save it. |
-| `schemaVersion` | `1` | yes | |
+| `inferenceReport` | `InferenceReport` | yes | Per-column type/role/confidence/alternatives produced by the `ColumnMapper` (FR-042). Persisted for audit (FR-043). See [contracts/import-mapping.md](../contracts/import-mapping.md). |
+| `mappingDecision` | `MappingDecision` | yes | The operator-confirmed column → role mapping with `source: 'auto' \| 'manual' \| 'mixed'`, warnings raised during inference, and the confirmation timestamp. Persisted for audit (FR-043). |
+| `schemaVersion` | `2` | yes | Batches persisted under v1 are migrated on read to a synthetic decision representing the v1 fixed-header schema (`source: 'auto'`, mapping derived from the canonical column order). |
 
 ### Invariants
 
 - `validRows + invalidRows === totalRows`.
 - If `outcome === "rejected-structural"`, then `validRows === 0` and no
-  `FinancialRecord` carries this `importBatchId`.
+  `FinancialRecord` carries this `importBatchId`; `mappingDecision` MAY
+  be absent because the file never reached stage 3.
 - If `outcome === "imported-valid"`, then exactly `validRows` records exist
-  with this `importBatchId`.
+  with this `importBatchId`, and `mappingDecision.confirmedAt` MUST be
+  set.
 - `outcome === "cancelled"` ⇒ no records exist with this `importBatchId`.
+  `mappingDecision` is set iff the operator at least reached the
+  confirmation step before cancelling.
+- Every column referenced in `mappingDecision.mapping` MUST appear in
+  `inferenceReport.columns` (same `columnIndex` values).
+
+---
+
+## Value object: `RawTable` (import stage 1 output)
+
+Produced by `src/modules/import/domain/parsing/` for both CSV and JSON
+imports. Decoupled from semantic meaning — the same shape is consumed by
+the inferrer, the normalizer, and the validator regardless of source
+format.
+
+| Field | Type | Notes |
+|---|---|---|
+| `headers` | `string[]` | Original column names; synthesized as `col_1`, `col_2`, … when absent (CSV with no header row, or unwrapped JSON with heterogeneous keys). |
+| `rows` | `string[][]` | Every cell stringified (numbers / booleans coerced to their canonical decimal/boolean string at parse time). Length of every inner array equals `headers.length`; short rows are padded with empty strings. |
+| `meta` | `RawTableMeta` | Parser-derived metadata for the UI (delimiter, line endings, JSON shape, etc.). See contract files. |
+
+---
+
+## Value object: `ColumnInference` (import stage 2 output)
+
+One per column in `RawTable`. Produced by any `ColumnMapper`
+implementation; see [contracts/import-mapping.md](../contracts/import-mapping.md).
+
+| Field | Type | Notes |
+|---|---|---|
+| `columnIndex` | `number` | 0-based; matches `RawTable.headers`. |
+| `header` | `string` | Original or synthesized. |
+| `inferredType` | `'string' \| 'number' \| 'date' \| 'enum' \| 'boolean'` | Dominant type across the sampled rows. |
+| `inferredRole` | `SemanticRole` | Highest-composite-confidence role. |
+| `confidence` | `number` (`[0, 1]`) | `0.6 * headerScore + 0.4 * valueScore`. |
+| `alternativeRoles` | `Array<{role: SemanticRole; confidence: number}>` | Top-2 next candidates, sorted desc. |
+| `sampleSize` | `number` | Rows considered; ≤ 200. |
+| `mismatchRate` | `number` (`[0, 1]`) | Share of sampled rows whose value did not match `inferredType`. |
+
+---
+
+## Type: `SemanticRole`
+
+```ts
+type SemanticRole =
+  | 'date' | 'type' | 'amount' | 'category' | 'description'  // required
+  | 'counterparty' | 'currency'                                // optional
+  | 'metadata' | 'ignore';                                     // sinks
+```
+
+The five required roles MUST each be present in any `MappingDecision`
+that the operator confirms (FR-045).
+
+---
+
+## Value object: `ColumnMapping`
+
+```ts
+type ColumnMapping = Record<number, SemanticRole>;
+```
+
+Keyed by `columnIndex`. **Every** column from `RawTable.headers` MUST
+have an entry. Operators select `'ignore'` or `'metadata'` for columns
+without a canonical role.
+
+---
+
+## Value object: `MappingDecision` (import stage 3 output)
+
+| Field | Type | Notes |
+|---|---|---|
+| `mapping` | `ColumnMapping` | The confirmed column → role assignments. |
+| `source` | `'auto' \| 'manual' \| 'mixed'` | `'auto'` = zero manual edits; `'manual'` = every column set by hand; `'mixed'` = at least one operator override on top of auto-inferred mapping. |
+| `warnings` | `MappingWarning[]` | Unresolved warnings the operator chose to override (or that don't block confirmation — e.g. `MIXED_TYPE_COLUMN`). |
+| `confirmedAt` | `IsoDateTime` | Timestamp of the operator's confirm action. |
+| `amountConvention` | `'minor-units' \| 'major-decimal'` | Required when the inferrer flagged `AMBIGUOUS_AMOUNT_CONVENTION` (typical for integer-only JSON values). |
+| `dateFormatPerColumn` | `Record<number, 'iso' \| 'dd-mm-yyyy' \| 'mm-dd-yyyy'>` | Required when `AMBIGUOUS_DATE_FORMAT` was flagged. |
+| `decimalSeparatorPerColumn` | `Record<number, '.' \| ','>` | Required when `AMBIGUOUS_DECIMAL_SEPARATOR` was flagged. |
+| `typeCanonicalization` | `Record<string, 'income' \| 'expense'>` | Maps the source vocabulary (e.g. `{I: 'income', E: 'expense'}`) to the canonical type values. |
+
+Persisted on `ImportBatch` for audit. The full schema and the warning
+catalog live in
+[contracts/import-mapping.md](../contracts/import-mapping.md).
+
+---
+
+## Value object: `MappingWarning`
+
+Tagged union with one variant per warning code. Full catalog (with
+trigger conditions and confirmability) lives in
+[contracts/import-mapping.md §4](../contracts/import-mapping.md#4-warnings).
+Codes referenced from the data model: `AMBIGUOUS_ROLE`, `LOW_CONFIDENCE`,
+`MIXED_TYPE_COLUMN`, `MISSING_REQUIRED_ROLE`,
+`CURRENCY_DIFFERS_FROM_WORKSPACE`, `AMBIGUOUS_DATE_FORMAT`,
+`AMBIGUOUS_DECIMAL_SEPARATOR`, `AMBIGUOUS_AMOUNT_CONVENTION`.
+
+---
+
+## Value object: `InferenceReport`
+
+The full output of stage 2. Persisted on `ImportBatch`.
+
+| Field | Type | Notes |
+|---|---|---|
+| `columns` | `ColumnInference[]` | One per column in `RawTable`. |
+| `globalWarnings` | `MappingWarning[]` | Cross-column warnings (`AMBIGUOUS_ROLE`, `MISSING_REQUIRED_ROLE`). |
 
 ---
 
@@ -281,7 +400,7 @@ dismissed.
 | `status` | `"open" \| "dismissed" \| "resolved-by-edit"` | |
 | `createdAt` | `IsoDateTime` | yes |
 | `updatedAt` | `IsoDateTime` | yes |
-| `schemaVersion` | `1` | |
+| `schemaVersion` | `2` | |
 
 ### State transitions
 
@@ -319,13 +438,13 @@ The plaintext payload that gets serialized → encrypted → written via
 `StorageAdapter.set(key, ciphertext)`:
 
 ```ts
-type WorkspacePayloadV1 = {
-  schemaVersion: 1;
+type WorkspacePayloadV2 = {
+  schemaVersion: 2;
   workspace: Workspace;
-  records: FinancialRecord[];
+  records: FinancialRecord[];      // each may carry an extraMetadata bag
   categories: Category[];
   counterparties: Counterparty[];
-  importBatches: ImportBatch[];
+  importBatches: ImportBatch[];    // each carries mappingDecision + inferenceReport
   inconsistencies: InconsistencyFinding[];
   settings: {
     aiEnabled: boolean;            // operator can disable AI subsystem (FR-029)
@@ -335,13 +454,31 @@ type WorkspacePayloadV1 = {
 };
 ```
 
+### v1 → v2 migration (read-side)
+
+`core/storage/encrypted-store.ts` dispatches by `schemaVersion`:
+
+- v1 payloads are read with the legacy schema, then transformed in
+  memory:
+  - Every `FinancialRecord` gets `extraMetadata: {}`.
+  - Every `ImportBatch` whose `outcome === 'imported-valid'` gets a
+    synthetic `inferenceReport` and `mappingDecision` representing the
+    v1 fixed-header schema (`mapping.source: 'auto'`, `confirmedAt =
+    importedAt`); v1 batches whose `outcome === 'rejected-structural'`
+    keep `mappingDecision` absent.
+  - `schemaVersion` on every entity and on the wrapper is bumped to `2`.
+- The migrated payload is written back on the next successful workspace
+  write (no eager re-encryption pass — migration is lazy, on first
+  mutation).
+- v2 payloads pass through unchanged.
+
 A separate non-secret key holds the brute-force throttle counter (per
 research R6) and the workspace's KDF descriptor mirror so we can render the
 unlock UI without first decrypting:
 
 ```
 autokeep:ws:<id>           → encrypted blob (per R6)
-autokeep:ws:<id>:meta      → { kdf: KdfDescriptor, schemaVersion: 1 }
+autokeep:ws:<id>:meta      → { kdf: KdfDescriptor, schemaVersion: 2 }
 autokeep:ws:<id>:throttle  → { failedAttempts: number; lastAttemptAt: IsoDateTime }
 ```
 

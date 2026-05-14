@@ -1,63 +1,104 @@
 .validation-report {
   display: flex;
   flex-direction: column;
-  gap: var(--ak-spacing-3);
-  padding: var(--ak-spacing-4) 0;
+  gap: var(--ak-space-4);
+  padding: var(--ak-space-5) 0;
 }
 
-.validation-outcome {
-  padding: var(--ak-spacing-3) var(--ak-spacing-4);
-  border: 1px solid var(--ak-color-border);
-  border-radius: var(--ak-radius-sm);
-  background: var(--ak-color-surface-1);
-  font-size: var(--ak-font-size-sm);
-  line-height: var(--ak-line-height-base);
+.validation-report__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--ak-space-3);
 }
 
-.validation-outcome--ok {
-  border-color: var(--ak-color-success);
-  background: #f0faf4;
+.validation-report__summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-1);
+  padding: var(--ak-space-4) var(--ak-space-5);
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-lg);
+}
+
+.validation-report__summary-label {
+  font-size: var(--ak-text-xs);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--ak-tracking-wide);
+}
+
+.validation-report__summary-value {
+  font-family: var(--ak-font-display);
+  font-size: var(--ak-text-2xl);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text);
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: var(--ak-tracking-tight);
+  line-height: var(--ak-leading-tight);
+}
+
+.validation-report__summary-value--valid {
   color: var(--ak-color-success);
 }
 
-.validation-outcome--warning {
-  border-color: var(--ak-color-warning);
-  background: #fef9ec;
-  color: var(--ak-color-warning);
-}
-
-.validation-outcome--error {
-  border-color: var(--ak-color-danger);
-  background: #fce8e8;
+.validation-report__summary-value--invalid {
   color: var(--ak-color-danger);
 }
 
-@media (prefers-color-scheme: dark) {
-  .validation-outcome--ok {
-    background: rgba(29, 108, 58, 0.12);
-  }
-  .validation-outcome--warning {
-    background: rgba(139, 90, 0, 0.12);
-  }
-  .validation-outcome--error {
-    background: rgba(179, 38, 30, 0.12);
-  }
+.validation-outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ak-space-3);
+  padding: var(--ak-space-4) var(--ak-space-5);
+  border-radius: var(--ak-radius-lg);
+  border-left: 3px solid var(--ak-color-border-strong);
+  background: var(--ak-color-surface-muted);
+  font-size: var(--ak-text-base);
+  line-height: var(--ak-leading-normal);
+}
+
+.validation-outcome--ok {
+  background: var(--ak-color-success-soft-bg);
+  border-left-color: var(--ak-color-success);
+  color: var(--ak-color-success-soft-text);
+}
+
+.validation-outcome--warning {
+  background: var(--ak-color-warning-soft-bg);
+  border-left-color: var(--ak-color-warning);
+  color: var(--ak-color-warning-soft-text);
+}
+
+.validation-outcome--error {
+  background: var(--ak-color-danger-soft-bg);
+  border-left-color: var(--ak-color-danger);
+  color: var(--ak-color-danger-soft-text);
 }
 
 .capacity-warning {
   display: flex;
-  align-items: center;
-  gap: var(--ak-spacing-3);
-  padding: var(--ak-spacing-3) var(--ak-spacing-4);
-  background: #fef9ec;
-  border: 1px solid var(--ak-color-warning);
-  border-radius: var(--ak-radius-sm);
-  font-size: var(--ak-font-size-sm);
-  color: var(--ak-color-warning);
+  align-items: flex-start;
+  gap: var(--ak-space-3);
+  padding: var(--ak-space-4) var(--ak-space-5);
+  background: var(--ak-color-warning-soft-bg);
+  border-left: 3px solid var(--ak-color-warning);
+  border-radius: var(--ak-radius-lg);
+  font-size: var(--ak-text-base);
+  color: var(--ak-color-warning-soft-text);
 }
 
 .validation-actions {
   display: flex;
-  gap: var(--ak-spacing-3);
-  padding-top: var(--ak-spacing-2);
+  gap: var(--ak-space-3);
+  padding-top: var(--ak-space-3);
+  justify-content: flex-end;
+}
+
+.validation-report__table {
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-xl);
+  overflow: hidden;
 }

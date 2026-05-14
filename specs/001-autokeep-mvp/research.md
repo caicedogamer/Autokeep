@@ -379,6 +379,154 @@ no thrown non-`Error`). Prettier removes style debate.
 
 ---
 
+## R15 — Heuristic column inference (in-browser, no dependencies)
+
+**Decision**: Implement column inference as a pure-TypeScript module
+(`src/modules/import/domain/inference/`) using two complementary signals
+per column — a bilingual header-name regex score and a value-pattern
+score over a bounded row sample (200 rows). The result is encapsulated
+behind a `ColumnMapper` interface so a future AI strategy can replace it
+without touching parsing, normalization, or validation (FR-048).
+
+**Rationale**:
+- **No new dependency** (Constitution Principle VII). The heuristics are
+  ~300 LOC, deterministic, trivially unit-testable, and produce a stable
+  `confidence ∈ [0, 1]` per column. No fuzzy-matching library is needed
+  at the scope of ~10 canonical role names.
+- **Interpretable**: the operator sees which header pattern matched and
+  which value pattern matched. Confidence is grounded in observable
+  rules rather than a model checkpoint, which matters in a bookkeeping
+  product where the operator must trust the mapping before commit.
+- **Deterministic + testable**: the SC-017 benchmark (20 heterogeneous
+  fixture files, ≥ 80% auto-mapping accuracy) is reproducible run-to-run
+  and bisectable when a regression lands.
+- **Extensible**: the `ColumnMapper` interface (see
+  [contracts/import-mapping.md](contracts/import-mapping.md) §6) lets a
+  post-MVP AI-based mapper drop in. The pipeline already passes the
+  `InferenceContext` (workspace currency, locale, sample-size limit) so
+  the AI variant has the same signal surface.
+
+**Alternatives considered**:
+- **`Fuse.js` / `fast-fuzzy` for header matching**: a fuzzy-matching
+  library would help with typos in non-canonical headers but adds a
+  dependency (~7 kB gzipped) and the regex approach already handles
+  bilingual variants explicitly. Rejected per Principle VII — revisit
+  if SC-017 falls below 80% and the gap is concentrated on
+  near-miss header names.
+- **Bundled WASM language model (e.g., a small transformer or ONNX
+  classifier)**: multi-megabyte payload, opaque to the operator, and
+  the SC-017 bar of 80% on a constrained 5-role problem does not justify
+  it. Recorded as the natural "AI variant" extension point; same
+  rejection logic as R13 for AI categorization.
+- **Asking an external LLM to classify columns**: forbidden by the
+  Assumption that no financial data leaves the device by default.
+  Rejected outright.
+
+---
+
+## R16 — CSV delimiter auto-detection
+
+**Decision**: Configure PapaParse with `delimiter: ""` (empty string)
+when parsing CSV files. This activates PapaParse's built-in
+delimiter-detection heuristic which tries `,`, `;`, `\t`, and `|` and
+picks the delimiter producing the most consistent column counts across
+the first chunk of rows.
+
+**Rationale**: Heterogeneous CSV files in the bookkeeping space use
+comma (most US/UK sources), semicolon (most European and many Argentine
+bank exports, because locale decimal separator is `,`), and tab (legacy
+exports from spreadsheet software). Asking the operator to declare the
+delimiter up-front is exactly the friction the flexible import flow
+removes. PapaParse's auto-detect is well-tested and free.
+
+**Alternatives considered**:
+- **Asking the operator to pick the delimiter in the file picker
+  step**: extra UI noise; operators often don't know the delimiter.
+  Rejected.
+- **Sniffing the delimiter ourselves**: re-implementing PapaParse's
+  heuristic with no benefit. Rejected.
+
+---
+
+## R17 — JSON shape tolerance
+
+**Decision**: Accept three JSON top-level shapes (array of objects;
+object with a wrapper key whose value is an array of objects; NDJSON /
+JSON-Lines). Detection is in order: array → wrapped → NDJSON. The
+candidate wrapper keys (`records`, `data`, `transactions`, `items`,
+`movements`, `rows`, `entries`, `list`, `payload`, `results`) are
+checked in priority order. Other top-level fields under a wrapper are
+reported to the UI as `meta.wrapperFields` but not propagated to records
+in the MVP. See [contracts/import-json.schema.md](contracts/import-json.schema.md)
+for the full contract.
+
+**Rationale**: Real-world JSON exports vary in envelope shape (plain
+array vs. wrapper with metadata vs. NDJSON). Forcing a canonical
+`{schemaVersion, records[]}` envelope on every file — as the v1
+contract did — meant every external tool's output required
+pre-processing, which the flexible import flow exists to eliminate.
+Accepting three shapes covers the overwhelming majority of real exports
+without adding parsing complexity.
+
+**Alternatives considered**:
+- **Operator declares the JSON shape**: friction; operators usually
+  don't know. Rejected.
+- **Accept arbitrary nested structures and flatten them**: enables a
+  combinatorial explosion of edge cases (nested arrays, nested
+  objects). Rejected for MVP — flat object rows only, with
+  nested-value cells stringified into `metadata`.
+- **Require operator to provide a JSONPath expression to locate the
+  records array**: too technical for the target operator. Rejected.
+
+---
+
+## R18 — Theme service & documented exception to Principle III
+
+**Decision**: A small `src/core/theme/` module owns the operator's
+preference for light / dark / system theme, persisting it under the
+non-secret `localStorage` key `autokeep:theme`. The key is the **sole
+documented exception** to Constitution Principle III (which routes all
+`localStorage` access through `StorageAdapter`); ESLint's
+`no-restricted-globals` rule allows-lists `src/core/theme/**` and
+`src/core/storage/**` only.
+
+**Rationale**:
+- **Operates before unlock**: the theme must apply on the unlock screen
+  (FR-040) — i.e., before any encrypted workspace blob is available.
+  Routing the preference through `EncryptedStore` is a chicken-and-egg
+  loop because `EncryptedStore` requires an unlocked workspace key,
+  which requires the operator to type a passphrase, which requires the
+  unlock screen to be rendered in the correct theme.
+- **Non-secret, non-financial**: the preference is `'system' | 'light'
+  | 'dark'`. It carries no record content, no identifier, no
+  passphrase, no salt — nothing that SC-014 ("zero plaintext financial
+  data at rest") covers.
+- **Standard pattern**: every comparable SaaS (Stripe, Linear, GitHub,
+  Vercel, Mercury) persists the same way, for the same reason.
+- **Anti-flash guarantee**: a tiny inline script in `index.html` reads
+  the key before paint and sets `<html data-theme>`, eliminating the
+  flash-of-incorrect-theme on reload. The script is 4 lines, dependency-
+  free, and isolated to the boot HTML.
+
+**Alternatives considered**:
+- **Cookie**: requires a backend (forbidden by Principle III) or
+  document.cookie with all its security caveats; no benefit over
+  `localStorage` for a non-secret value.
+- **`sessionStorage`**: discards the choice when the tab closes — the
+  operator must re-pick every session. Bad UX.
+- **A second encrypted blob keyed off a separate passphrase**:
+  proportionate complexity for a visual preference. Rejected.
+- **In-memory only**: the operator's choice is lost on every reload.
+  Rejected.
+
+**Scope of the exception (locked)**: `src/core/theme/` may only read /
+write the `autokeep:theme` key. Adding any other key is a Constitution
+violation requiring a separate amendment. The ESLint allow-list is
+narrow on purpose so future violations are caught by tooling, not
+review.
+
+---
+
 ## Open questions deferred to later phases
 
 | ID | Topic | Why deferred |

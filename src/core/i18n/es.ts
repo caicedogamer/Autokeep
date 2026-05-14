@@ -149,6 +149,40 @@ export const es = {
   'export.empty.body':
     'El filtro activo no produce registros. ¿Deseas exportar un archivo vacío (solo encabezado)?',
   'export.empty.confirm': 'Exportar de todas formas',
+
+  // App shell — sidebar nav
+  'shell.nav.group.general': 'General',
+  'shell.nav.group.data': 'Datos',
+  'shell.nav.group.ai': 'IA',
+  'shell.nav.group.system': 'Sistema',
+  'shell.nav.dashboard': 'Tablero',
+  'shell.nav.records': 'Registros',
+  'shell.nav.filters': 'Filtros',
+  'shell.nav.import': 'Importar',
+  'shell.nav.export': 'Exportar',
+  'shell.nav.inconsistencies': 'Inconsistencias',
+  'shell.nav.settings': 'Ajustes',
+
+  // App shell — topbar
+  'shell.topbar.search.placeholder': 'Buscar…',
+  'shell.topbar.search.hint': 'Próximamente',
+  'shell.topbar.lock': 'Bloquear espacio',
+
+  // Page titles (one per route)
+  'shell.page.dashboard': 'Tablero',
+  'shell.page.records': 'Registros',
+  'shell.page.filters': 'Filtros',
+  'shell.page.import': 'Importar datos',
+  'shell.page.export': 'Exportar datos',
+  'shell.page.inconsistencies': 'Inconsistencias',
+  'shell.page.settings': 'Ajustes',
+  'shell.page.notFound': 'Página no encontrada',
+
+  // Theme toggle
+  'theme.toggle.label': 'Tema',
+  'theme.option.system': 'Tema del sistema',
+  'theme.option.light': 'Tema claro',
+  'theme.option.dark': 'Tema oscuro',
 } as const;
 
 export type CopyKey = keyof typeof es;

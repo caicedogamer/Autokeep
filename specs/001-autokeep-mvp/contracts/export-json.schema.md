@@ -1,9 +1,14 @@
-# Contract: JSON Export Schema (v1)
+# Contract: JSON Export Schema (v2)
 
 **Owner module**: `src/modules/export/domain/`
-**Spec refs**: FR-017, FR-018, FR-019, FR-020, US4 acceptance scenarios
-**Versioning**: `schemaVersion: 1`. Round-trip with the v1 JSON importer
-is a hard requirement (US4 acceptance scenario 4 + SC-005).
+**Spec refs**: FR-017, FR-018, FR-019, FR-020, FR-044, US4 acceptance scenarios, SC-005, SC-019
+**Versioning**: `schemaVersion: 2`. Round-trip with the **flexible** JSON
+importer (`schemaVersion: 2`) is a hard requirement (US4 acceptance
+scenario 4 + SC-005). Records carrying `extraMetadata` MUST round-trip
+through export + re-import without loss per **SC-019**. The exported
+shape is a **wrapped array** (one of the three accepted JSON shapes in
+[import-json.schema.md](import-json.schema.md)), so it is auto-detected
+by the flexible importer's stage 1 parser.
 
 ---
 
@@ -11,7 +16,7 @@ is a hard requirement (US4 acceptance scenario 4 + SC-005).
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "exportedAt": "2026-05-12T14:03:11.482Z",
   "workspace": { "id": "...", "name": "...", "currency": "ARS", "currencyMinorUnits": 2 },
   "filter": { /* serialized FilterState that produced this export */ },
@@ -21,15 +26,13 @@ is a hard requirement (US4 acceptance scenario 4 + SC-005).
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `schemaVersion` | `1` | yes | Matches the import contract. |
+| `schemaVersion` | `2` | yes | Matches the flexible import contract. |
 | `exportedAt` | `IsoDateTime` | yes | When the file was produced. |
-| `workspace` | `{ id, name, currency, currencyMinorUnits }` | yes | Identifies the source workspace; the importer enforces `currency` + `currencyMinorUnits` match. |
-| `filter` | serialized `FilterState` | yes | Operator-readable record of the filter that produced the export (audit/transparency). The importer ignores this field. |
-| `records` | `RecordItem[]` | yes | Same shape as the import contract (integer minor units for `amount`). May be empty (with FR-020 confirmation). |
+| `workspace` | `{ id, name, currency, currencyMinorUnits }` | yes | Identifies the source workspace; round-trip into the same workspace requires the same currency. The flexible importer surfaces `CURRENCY_DIFFERS_FROM_WORKSPACE` if the target workspace differs (FR-049). |
+| `filter` | serialized `FilterState` | yes | Operator-readable record of the filter that produced the export (audit/transparency). The importer reports this in `meta.wrapperFields` but does not propagate it to records. |
+| `records` | `RecordItem[]` | yes | Each item is a flat object. The flexible importer treats the union of object keys as headers; canonical keys map to their canonical roles with high confidence; the `meta.*` keys (see below) map to `metadata` automatically. May be empty (with FR-020 confirmation). |
 
 ### `RecordItem`
-
-Identical to the JSON import schema:
 
 ```ts
 type RecordItem = {
@@ -39,7 +42,10 @@ type RecordItem = {
   category: string;      // resolved name
   description: string;
   counterparty?: string; // omitted if absent
-};
+  // Plus one key per extraMetadata entry, prefixed "meta:" so the
+  // flexible importer's HeuristicColumnMapper auto-routes them to the
+  // metadata role on re-import. Example: "meta:internalId": "INV-12345"
+} & Record<`meta:${string}`, string>;
 ```
 
 ---
@@ -57,7 +63,7 @@ If the operator opts into an encrypted export at export time:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "encrypted": true,
   "kdf": { "name": "argon2id", "salt": "<base64>", "params": { ... } },
   "cipher": "AES-256-GCM",

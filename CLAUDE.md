@@ -57,17 +57,20 @@ AutoKeep is a browser-only SPA with no backend. All persistence is through `loca
 
 **Boot sequence** (`src/main.ts`):
 
-1. Check localStorage for existing workspaces.
-2. None → `SetupScreen`; some → `UnlockScreen` (passphrase entry).
-3. On unlock, create the `CryptoService` and decrypt the workspace payload.
-4. Wire the hash router and mount module-level UI into `#main-content`.
+1. Anti-flash inline script in `index.html` reads `autokeep:theme` (if any) and sets `<html data-theme>` before paint.
+2. `createThemeService()` (from `src/core/theme/`) takes over: subscribes to `prefers-color-scheme`, re-applies on changes, exposes a `ThemeToggle` UI for the topbar.
+3. Check localStorage for existing workspaces.
+4. None → `SetupScreen`; some → `UnlockScreen` (passphrase entry).
+5. On unlock, create the `CryptoService` and decrypt the workspace payload.
+6. Build the app shell (sidebar + topbar + content) defined in `src/styles/shell.css`, wire the hash router, and mount module-level UI into `#main-content`.
 
 **Layer rules** (enforced by ESLint):
 
 - `domain/` — pure functions only; no DOM, no `localStorage`, no network.
 - `services/` — orchestration; no DOM access (banned by `no-restricted-globals`).
 - `ui/` — DOM manipulation only; calls services, never touches `localStorage` directly.
-- `src/core/storage/**` — the only code allowed to read/write `localStorage`.
+- `src/core/storage/**` — the only code allowed to read/write `localStorage` **for financial data**.
+- `src/core/theme/**` — sole documented exception to Principle III. May read/write **only** the `autokeep:theme` preference (non-secret visual state). See `specs/001-autokeep-mvp/research.md` R18.
 
 **Module layout** (`src/modules/<module>/`):
 
@@ -81,16 +84,17 @@ index.ts     # public surface of the module
 
 **Modules**: `workspace`, `records`, `filters`, `import`, `export`, `dashboard`, `ai`.
 
-**Core** (`src/core/`): `crypto/`, `storage/`, `router/`, `workers/`, `i18n/`, `events/`, `result.ts`.
+**Core** (`src/core/`): `crypto/`, `storage/`, `router/`, `workers/`, `i18n/`, `events/`, `theme/`, `result.ts`.
 
 **Shared utilities**:
 
 - `Result<T,E>` — explicit success/failure (no silent catches). See `src/core/result.ts`.
 - `t('key')` — typed i18n helper. All strings in `src/core/i18n/es.ts`.
-- `StorageAdapter` interface — the only sanctioned localStorage path.
+- `StorageAdapter` interface — the only sanctioned localStorage path for financial data.
+- `createThemeService()` — owns the `autokeep:theme` preference and applies `<html data-theme>`. Sole exception to Principle III; see `src/core/theme/`.
 - Workers: `filter.worker.ts` and `import.worker.ts` keep heavy work off the main thread.
 
-**CSS**: Design tokens in `src/styles/tokens.css`. Shared utilities (`.btn`, `.form-group`, `.visually-hidden`) in `src/styles/components.css`. Each UI component has its own `.css` file (imported at the top of the `.ts` file). No CSS frameworks.
+**CSS**: Design tokens in `src/styles/tokens.css` (palette, type scale, spacing, radius, shadows, motion, z-index). Shared utilities (`.btn`, `.input`, `.card`, `.badge`, `.kpi`, `.table`, `.alert`, etc.) in `src/styles/components.css`. App shell layout (sidebar + topbar + content) in `src/styles/shell.css`. Each UI component has its own `.css` file (imported at the top of the `.ts` file). Indigo accent (`--ak-color-brand-600: #4F46E5`); dark mode via `[data-theme="dark"]` on `<html>` (managed by `theme-service`). No CSS frameworks.
 
 ---
 
@@ -98,7 +102,7 @@ index.ts     # public surface of the module
 
 These are enforced by ESLint and will fail CI if violated:
 
-1. **No direct `localStorage` / `sessionStorage` access outside `src/core/storage/`** — use `StorageAdapter`.
+1. **No direct `localStorage` / `sessionStorage` access outside `src/core/storage/` or `src/core/theme/`** — use `StorageAdapter` for financial data; `theme/` is the documented exception, scoped to the single key `autokeep:theme` (research.md R18).
 2. **No DOM globals (`document`, `window`) in `domain/` or `services/`** — DOM work belongs in `ui/`.
 3. **No floating promises** — every `Promise` must be `await`ed or explicitly `void`-cast.
 4. **No thrown non-Error values** — use typed subclasses of `AutoKeepError`.

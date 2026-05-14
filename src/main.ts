@@ -2,29 +2,35 @@
  * Composition root — AutoKeep SPA bootstrap.
  *
  * Boot sequence:
- *   1. Render a skip-nav link and the #app root (from index.html).
- *   2. Check workspaces index in localStorage.
- *   3a. No workspaces → show SetupScreen.
- *   3b. Workspaces exist → show UnlockScreen.
- *   4. On successful unlock, wire the main router and load the records view.
+ *   1. Theme service applies the persisted [data-theme] (already pre-set
+ *      by the anti-flash script in index.html).
+ *   2. Check workspaces index in localStorage (via StorageAdapter).
+ *   3a. No workspaces → mount SetupScreen.
+ *   3b. Workspaces exist → mount UnlockScreen.
+ *   4. On successful unlock, build the app shell (sidebar + topbar +
+ *      content) and start the hash router.
  *
- * Constitution Principles I + II: no business logic here; only composition.
- * Principle III: LocalStorageAdapter is the only storage path.
+ * Constitution Principles I + II: no business logic here; only
+ * composition. Principle III: LocalStorageAdapter is the only storage
+ * path for financial data — `core/theme/` is the documented exception
+ * (research.md R18) for the non-secret visual theme.
  */
 
 import './styles/reset.css';
 import './styles/tokens.css';
 import './styles/components.css';
+import './styles/shell.css';
 
 import { LocalStorageAdapter } from './core/storage/local-storage-adapter.js';
 import { t } from './core/i18n/index.js';
+import { createThemeService } from './core/theme/index.js';
 import { CryptoService, createDefaultKdfWorker } from './core/crypto/crypto-service.js';
-// createDefaultKdfWorker returns a KdfWorkerLike; CryptoServiceDeps expects { createKdfWorker }.
 import { createRouter } from './core/router/router.js';
 import { WorkspaceService } from './modules/workspace/services/workspace-service.js';
 import { UnlockThrottle } from './modules/workspace/services/unlock-throttle.js';
 import { SetupScreen } from './modules/workspace/ui/setup-screen.js';
 import { UnlockScreen } from './modules/workspace/ui/unlock-screen.js';
+import { ThemeToggle } from './modules/workspace/ui/theme-toggle.js';
 import type { UnlockedWorkspace } from './modules/workspace/services/workspace-service.js';
 import { FilterBar } from './modules/filters/ui/filter-bar.js';
 import { ActiveFilters } from './modules/filters/ui/active-filters.js';
@@ -40,6 +46,10 @@ import { ExportService } from './modules/export/services/export-service.js';
 import { ExportDialog } from './modules/export/ui/export-dialog.js';
 import { mountDashboard } from './modules/dashboard/index.js';
 import { AiService, InconsistenciesView, AiSettingsPanel } from './modules/ai/index.js';
+
+/* ---------- Theme service (singleton, started before anything else) ---------- */
+
+const themeService = createThemeService();
 
 /* ---------- Storage adapter (singleton) ---------- */
 
@@ -64,74 +74,282 @@ if (!root) throw new Error('#app element not found');
 
 let currentUnlocked: UnlockedWorkspace | null = null;
 
+/* ---------- Sidebar / topbar icons (inline SVG, 18×18, currentColor) ---------- */
+
+const ICON = {
+  dashboard:
+    '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 3h5v6H3V3zm0 8h5v4H3v-4zm7 0h5v4h-5v-4zm0-8h5v6h-5V3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  records:
+    '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 4.5h12M3 9h12M3 13.5h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  filters:
+    '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M3 4h12l-4.6 5.2v4.3l-2.8 1.2V9.2L3 4z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  import:
+    '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2v9m0 0l-3-3m3 3l3-3M3 13v2h12v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  export:
+    '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 11V2m0 0l-3 3m3-3l3 3M3 13v2h12v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  ai: '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 2.5l1.4 3 3 1.4-3 1.4L9 11.4l-1.4-3-3-1.4 3-1.4L9 2.5zM13.5 12l.8 1.7L16 14.5l-1.7.8L13.5 17l-.8-1.7-1.7-.8 1.7-.8.8-1.7z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+  settings:
+    '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="2.2" stroke="currentColor" stroke-width="1.4"/><path d="M9 1.5v2m0 11v2m7.5-7.5h-2m-11 0h-2M14.3 3.7l-1.4 1.4M5.1 12.9l-1.4 1.4M14.3 14.3l-1.4-1.4M5.1 5.1L3.7 3.7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  search:
+    '<svg viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.4"/><path d="M9 9l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  lock: '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="4" y="8" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M6 8V5.5a3 3 0 016 0V8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+} as const;
+
+type NavGroup = {
+  labelKey: 'shell.nav.group.general' | 'shell.nav.group.data' | 'shell.nav.group.ai';
+  items: Array<{
+    path: string;
+    labelKey: Parameters<typeof t>[0];
+    icon: string;
+    pageTitleKey: Parameters<typeof t>[0];
+  }>;
+};
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    labelKey: 'shell.nav.group.general',
+    items: [
+      {
+        path: '/dashboard',
+        labelKey: 'shell.nav.dashboard',
+        icon: ICON.dashboard,
+        pageTitleKey: 'shell.page.dashboard',
+      },
+      {
+        path: '/records',
+        labelKey: 'shell.nav.records',
+        icon: ICON.records,
+        pageTitleKey: 'shell.page.records',
+      },
+      {
+        path: '/filters',
+        labelKey: 'shell.nav.filters',
+        icon: ICON.filters,
+        pageTitleKey: 'shell.page.filters',
+      },
+    ],
+  },
+  {
+    labelKey: 'shell.nav.group.data',
+    items: [
+      {
+        path: '/import',
+        labelKey: 'shell.nav.import',
+        icon: ICON.import,
+        pageTitleKey: 'shell.page.import',
+      },
+      {
+        path: '/export',
+        labelKey: 'shell.nav.export',
+        icon: ICON.export,
+        pageTitleKey: 'shell.page.export',
+      },
+    ],
+  },
+  {
+    labelKey: 'shell.nav.group.ai',
+    items: [
+      {
+        path: '/ai/inconsistencies',
+        labelKey: 'shell.nav.inconsistencies',
+        icon: ICON.ai,
+        pageTitleKey: 'shell.page.inconsistencies',
+      },
+    ],
+  },
+];
+
+const FOOTER_ITEM = {
+  path: '/settings',
+  labelKey: 'shell.nav.settings' as const,
+  icon: ICON.settings,
+  pageTitleKey: 'shell.page.settings' as const,
+};
+
+const PAGE_TITLE_BY_PATH = new Map<string, string>(
+  [...NAV_GROUPS.flatMap((g) => g.items), FOOTER_ITEM].map((item) => [
+    item.path,
+    t(item.pageTitleKey),
+  ]),
+);
+
 const bootRouter = (unlocked: UnlockedWorkspace): void => {
   currentUnlocked = unlocked;
   root.innerHTML = '';
 
-  // Accessibility skeleton: header + nav + main + footer (FR-037)
-  const header = document.createElement('header');
-  header.setAttribute('role', 'banner');
-  const h1 = document.createElement('h1');
-  h1.id = 'app-heading';
-  h1.textContent = 'AutoKeep';
-  h1.style.cssText = 'font-size:1.125rem;margin:0;padding:0.75rem 1rem;';
-  header.appendChild(h1);
-  root.appendChild(header);
+  // ── App-shell scaffold ─────────────────────────────────────────────
+  const shell = document.createElement('div');
+  shell.className = 'app-shell';
+  root.appendChild(shell);
 
-  const nav = document.createElement('nav');
-  nav.setAttribute('aria-label', 'Navegación principal');
-  const navLinks: Array<{ path: string; label: string }> = [
-    { path: '/records', label: 'Registros' },
-    { path: '/filters', label: 'Filtros' },
-    { path: '/import', label: 'Importar' },
-    { path: '/export', label: 'Exportar' },
-    { path: '/dashboard', label: 'Tablero' },
-    { path: '/ai/inconsistencies', label: 'IA' },
-    { path: '/settings', label: 'Ajustes' },
-  ];
-  const navList = document.createElement('ul');
-  navList.style.cssText =
-    'display:flex;flex-wrap:wrap;gap:0.5rem;list-style:none;margin:0;padding:0.5rem 1rem;border-bottom:1px solid var(--ak-color-border);';
-  for (const { path, label } of navLinks) {
-    const li = document.createElement('li');
+  /* Sidebar */
+  const sidebar = document.createElement('nav');
+  sidebar.className = 'app-shell__sidebar';
+  sidebar.setAttribute('aria-label', 'Navegación principal');
+  shell.appendChild(sidebar);
+
+  // Brand
+  const brand = document.createElement('div');
+  brand.className = 'app-shell__brand';
+  brand.innerHTML = `
+    <div class="app-shell__brand-mark" aria-hidden="true">A</div>
+    <span class="app-shell__brand-name">${t('common.app.name')}</span>
+  `;
+  sidebar.appendChild(brand);
+
+  // Workspace pill
+  const workspacePill = document.createElement('div');
+  workspacePill.className = 'app-shell__workspace';
+  workspacePill.innerHTML = `
+    <span class="app-shell__workspace-dot" aria-hidden="true"></span>
+    <span class="app-shell__workspace-name"></span>
+  `;
+  const wsName = workspacePill.querySelector<HTMLElement>('.app-shell__workspace-name');
+  if (wsName) wsName.textContent = unlocked.payload.workspace.name;
+  sidebar.appendChild(workspacePill);
+
+  // Nav groups
+  const navContainer = document.createElement('div');
+  navContainer.className = 'app-shell__nav';
+  sidebar.appendChild(navContainer);
+
+  const navLinks = new Map<string, HTMLAnchorElement>();
+
+  const createNavLink = (
+    path: string,
+    labelKey: Parameters<typeof t>[0],
+    icon: string,
+  ): HTMLAnchorElement => {
     const a = document.createElement('a');
+    a.className = 'app-shell__nav-link';
     a.href = `#${path}`;
-    a.textContent = label;
-    a.style.cssText =
-      'padding:0.25rem 0.75rem;text-decoration:none;color:var(--ak-color-link);border-radius:4px;';
-    li.appendChild(a);
-    navList.appendChild(li);
-  }
-  nav.appendChild(navList);
-  root.appendChild(nav);
+    a.dataset['path'] = path;
+    a.innerHTML = `${icon}<span class="app-shell__nav-link-label">${t(labelKey)}</span>`;
+    navLinks.set(path, a);
+    return a;
+  };
 
+  for (const group of NAV_GROUPS) {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'app-shell__nav-group';
+    const labelEl = document.createElement('p');
+    labelEl.className = 'app-shell__nav-group-label';
+    labelEl.textContent = t(group.labelKey);
+    groupEl.appendChild(labelEl);
+    for (const item of group.items) {
+      groupEl.appendChild(createNavLink(item.path, item.labelKey, item.icon));
+    }
+    navContainer.appendChild(groupEl);
+  }
+
+  // Footer (settings) at the bottom
+  const footerNav = document.createElement('div');
+  footerNav.className = 'app-shell__footer';
+  footerNav.appendChild(createNavLink(FOOTER_ITEM.path, FOOTER_ITEM.labelKey, FOOTER_ITEM.icon));
+  sidebar.appendChild(footerNav);
+
+  /* Main column */
+  const mainCol = document.createElement('div');
+  mainCol.className = 'app-shell__main';
+  shell.appendChild(mainCol);
+
+  // Topbar (header role="banner")
+  const topbar = document.createElement('header');
+  topbar.className = 'app-shell__topbar';
+  topbar.setAttribute('role', 'banner');
+
+  const pageTitle = document.createElement('h1');
+  pageTitle.id = 'app-heading';
+  pageTitle.className = 'app-shell__topbar-title';
+  pageTitle.textContent = '';
+  topbar.appendChild(pageTitle);
+
+  const spacer = document.createElement('div');
+  spacer.className = 'app-shell__topbar-spacer';
+  topbar.appendChild(spacer);
+
+  // Search placeholder (not yet wired — Cmd-K is post-MVP)
+  const searchBtn = document.createElement('button');
+  searchBtn.type = 'button';
+  searchBtn.className = 'app-shell__topbar-search';
+  searchBtn.disabled = true;
+  searchBtn.title = t('shell.topbar.search.hint');
+  searchBtn.innerHTML = `
+    ${ICON.search}
+    <span class="app-shell__topbar-search-text">${t('shell.topbar.search.placeholder')}</span>
+    <kbd>⌘K</kbd>
+  `;
+  topbar.appendChild(searchBtn);
+
+  // Theme toggle (System / Light / Dark)
+  new ThemeToggle(topbar, { themeService });
+
+  mainCol.appendChild(topbar);
+
+  // Main content region
   const main = document.createElement('main');
   main.id = 'main-content';
+  main.className = 'app-shell__content';
   main.setAttribute('tabindex', '-1');
-  root.appendChild(main);
+  mainCol.appendChild(main);
 
-  const footer = document.createElement('footer');
-  footer.setAttribute('role', 'contentinfo');
-  footer.style.cssText =
-    'padding:0.75rem 1rem;font-size:0.875rem;color:var(--ak-color-text-muted);border-top:1px solid var(--ak-color-border);';
-  footer.textContent = `AutoKeep — Espacio: ${unlocked.payload.workspace.name}`;
-  root.appendChild(footer);
+  // Footer credit
+  const footerCredit = document.createElement('footer');
+  footerCredit.className = 'app-shell__footer-credit';
+  footerCredit.setAttribute('role', 'contentinfo');
+  footerCredit.textContent = `${t('common.app.name')} — ${unlocked.payload.workspace.name}`;
+  mainCol.appendChild(footerCredit);
 
+  /* Active-route reactivity */
+  const updateActiveRoute = (): void => {
+    const hash = (globalThis.location.hash || '#/dashboard').replace(/^#/, '');
+    let matched: string | null = null;
+    for (const [path] of navLinks) {
+      if (hash.startsWith(path)) {
+        matched = path;
+        break;
+      }
+    }
+    for (const [path, link] of navLinks) {
+      if (path === matched) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    }
+    const title = matched ? PAGE_TITLE_BY_PATH.get(matched) : null;
+    pageTitle.textContent = title ?? t('common.app.name');
+  };
+
+  /* Router */
   const router = createRouter(
     [
       {
         pattern: '/records',
         handler: () => {
           main.innerHTML = '';
-          main.textContent = `Registros — espacio: ${unlocked.payload.workspace.name}`;
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `
+            <div>
+              <h2 class="page-header__title">${t('shell.page.records')}</h2>
+              <p class="page-header__subtitle">${t('records.list.tableLabel')}</p>
+            </div>
+          `;
+          main.appendChild(heading);
+
+          const placeholder = document.createElement('div');
+          placeholder.className = 'card';
+          placeholder.innerHTML = `<p class="text-muted">${t('records.list.empty')}</p>`;
+          main.appendChild(placeholder);
         },
       },
       {
         pattern: '/filters',
         handler: () => {
           main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.filters')}</h2>`;
+          main.appendChild(heading);
 
-          // Filter panel host
           const filterHost = document.createElement('section');
           filterHost.className = 'filter-panel';
           main.appendChild(filterHost);
@@ -188,7 +406,6 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
             },
           });
 
-          // Cleanup on navigation away
           const cleanup = (): void => {
             coordinator.dispose();
             main.removeEventListener('destroy', cleanup);
@@ -200,6 +417,10 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
         pattern: '/import',
         handler: () => {
           main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.import')}</h2>`;
+          main.appendChild(heading);
 
           const pickerHost = document.createElement('section');
           pickerHost.className = 'import-picker-host';
@@ -215,8 +436,6 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
 
           const progress = new ImportProgress(progressHost);
 
-          // Import service needs a persist callback; stub here until wired
-          // fully to the workspace store.
           const importService = new ImportService({
             persistPayload: () => Promise.resolve(),
           });
@@ -226,7 +445,6 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           const reportView = new ValidationReportView(reportHost, {
             onCommit: () => {
               progress.showCommitting();
-              // Full commit wiring done in integration task; progress shown for now
             },
             onCancel: () => {
               reportHost.innerHTML = '';
@@ -255,6 +473,10 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
         pattern: '/export',
         handler: () => {
           main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.export')}</h2>`;
+          main.appendChild(heading);
 
           const dialogHost = document.createElement('div');
           dialogHost.className = 'export-dialog-host';
@@ -296,6 +518,11 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
         pattern: '/dashboard',
         handler: () => {
           main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.dashboard')}</h2>`;
+          main.appendChild(heading);
+
           let disposeDashboard: (() => void) | null = null;
 
           const render = (): void => {
@@ -325,6 +552,11 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
         pattern: '/ai/inconsistencies',
         handler: () => {
           main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.inconsistencies')}</h2>`;
+          main.appendChild(heading);
+
           const viewHost = document.createElement('section');
           viewHost.className = 'ai-inconsistencies-host';
           main.appendChild(viewHost);
@@ -336,7 +568,7 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
 
           const view = new InconsistenciesView(viewHost, {
             onDismiss: () => {
-              // Full wiring deferred to workspace-store integration task
+              /* Full wiring deferred to workspace-store integration task. */
             },
             onEdit: () => {
               router.navigate('/records');
@@ -358,15 +590,19 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
         pattern: '/settings',
         handler: () => {
           main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.settings')}</h2>`;
+          main.appendChild(heading);
+
           const settingsHost = document.createElement('section');
           settingsHost.className = 'ai-settings-host';
-          settingsHost.style.cssText = 'padding: 1.5rem;';
           main.appendChild(settingsHost);
 
           new AiSettingsPanel(settingsHost, {
             initialEnabled: true,
             onToggle: () => {
-              // Full persistence wiring deferred to workspace-store integration task
+              /* Full persistence wiring deferred to workspace-store integration task. */
             },
           });
         },
@@ -374,19 +610,25 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
       {
         pattern: '/not-found',
         handler: () => {
-          main.textContent = 'Página no encontrada.';
+          main.innerHTML = '';
+          const heading = document.createElement('section');
+          heading.className = 'page-header';
+          heading.innerHTML = `<h2 class="page-header__title">${t('shell.page.notFound')}</h2>`;
+          main.appendChild(heading);
         },
       },
     ],
-    { defaultPath: '/records', notFoundPath: '/not-found' },
+    { defaultPath: '/dashboard', notFoundPath: '/not-found' },
   );
 
-  // Focus-restore on route change (FR-037 / SC-012)
-  window.addEventListener('hashchange', () => {
+  // Focus-restore + sidebar/title sync on route change (FR-037 / SC-012)
+  globalThis.addEventListener('hashchange', () => {
     const mainEl = document.getElementById('main-content');
     if (mainEl) mainEl.focus();
+    updateActiveRoute();
   });
 
+  updateActiveRoute();
   router.start();
 };
 

@@ -64,7 +64,7 @@ merge (Constitution Principle VI).
 src/modules/
 ├── records/        US1 — CRUD + optimistic-concurrency conflict dialog
 ├── filters/        US2 — combined filters + free-text search
-├── import/         US3 — CSV/JSON validation + commit
+├── import/         US3 — flexible CSV/JSON import (parse → infer → confirm → normalize → validate → commit)
 ├── export/         US4 — filtered CSV/JSON export
 ├── dashboard/      US5 — analytical widgets
 ├── ai/             US6 — suggestions + inconsistency findings
@@ -95,8 +95,12 @@ router, event bus, `Result<T, E>`) lives in `src/core/`.
    call `localStorage` directly from a module.**
 2. **No DOM imports** in any `domain/` or `services/` file. Add a lint
    rule to enforce this.
-3. **Every CSV/JSON ingress** is validated by a Zod schema before a
-   single byte is persisted (FR-012, FR-015).
+3. **Every CSV/JSON ingress** runs through the 6-stage import pipeline
+   (parse → infer → operator-confirm → normalize → validate → persist).
+   Validation against the normalized model happens **before** a single
+   record is persisted (FR-012, FR-015, FR-043). The parser makes no
+   assumption about column meaning; the operator confirms the inferred
+   mapping in `mapping-preview.ts` before validation runs.
 4. **Heavy work runs in a worker** — KDF, CSV parse + validate, filter
    recompute. The main thread stays interactive.
 5. **No CSS framework.** Plain CSS files co-located in each module's
@@ -134,9 +138,26 @@ Then, in the browser:
 5. Open the **Settings → Privacy** screen and verify the on-screen
    summary matches FR-040 (encrypted at rest, no recovery, exports as
    backup).
+6. Open **`#/import`** and drop in any of the fixtures from
+   `tests/fixtures/heterogeneous/` (e.g. the Argentine bank statement
+   with semicolon delimiter). The flow is:
+   1. **File picker** accepts the file at the boundary; only parser-level
+      failures (corrupt bytes / malformed JSON) are rejected here.
+   2. **Mapping preview** shows the first ~20 rows with the inferred
+      role + confidence chip per column (Alta / Media / Baja). For an
+      ambiguous column (e.g., `Importe` vs `Saldo`) you should see an
+      `AMBIGUOUS_ROLE` badge and the confirm button disabled until you
+      pick.
+   3. After confirming the mapping (or accepting the auto-inferred
+      mapping with one click when no warnings are unresolved), the
+      pipeline runs normalization + validation in the import worker and
+      surfaces the per-row report.
+   4. Confirm "Importar válidas". The records appear in the list and
+      the audit trail on the resulting `ImportBatch` records both the
+      `inferenceReport` and the `mappingDecision` you confirmed.
 
-Hitting all five confirms the storage, encryption, optimistic-concurrency,
-and reload flows are wired correctly end-to-end.
+Hitting all six confirms the storage, encryption, optimistic-concurrency,
+reload, and flexible-import flows are wired correctly end-to-end.
 
 ---
 
