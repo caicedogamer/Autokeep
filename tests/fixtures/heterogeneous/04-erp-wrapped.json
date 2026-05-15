@@ -1,0 +1,30 @@
+{
+  "exportedFromSystem": "ERP-Pro",
+  "exportedAt": "2026-04-30T10:00:00Z",
+  "movements": [
+    {
+      "fecha": "2026-04-01",
+      "tipo": "ingreso",
+      "monto": 150000,
+      "rubro": "Ventas",
+      "detalle": "Factura A 0001",
+      "moneda": "ARS"
+    },
+    {
+      "fecha": "2026-04-02",
+      "tipo": "egreso",
+      "monto": 235050,
+      "rubro": "Servicios",
+      "detalle": "Pago internet abril",
+      "moneda": "ARS"
+    },
+    {
+      "fecha": "2026-04-03",
+      "tipo": "ingreso",
+      "monto": 18000000,
+      "rubro": "Ventas",
+      "detalle": "Factura B 0002",
+      "moneda": "ARS"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "expectedMapping": {
+    "0": "date",
+    "1": "type",
+    "2": "amount",
+    "3": "category",
+    "4": "description"
+  },
+  "description": "NDJSON stream (one object per line) — the parser must detect this fallback shape when JSON.parse on the whole file fails."
+}

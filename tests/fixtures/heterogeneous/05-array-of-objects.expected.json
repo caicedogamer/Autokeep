@@ -1,0 +1,12 @@
+{
+  "expectedMapping": {
+    "0": "date",
+    "1": "type",
+    "2": "amount",
+    "3": "category",
+    "4": "description",
+    "5": "counterparty",
+    "6": "metadata"
+  },
+  "description": "Flat array of objects with an extra non-canonical key (`internalId`) that must land in extraMetadata."
+}

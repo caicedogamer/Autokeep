@@ -38,10 +38,18 @@ import { ResultCount } from './modules/filters/ui/result-count.js';
 import { FilterCoordinator } from './modules/filters/services/filter-coordinator.js';
 import { emptyFilterState } from './modules/filters/domain/types.js';
 import type { FilterState } from './modules/filters/domain/types.js';
-import { ImportService } from './modules/import/services/import-service.js';
+import { ImportPipeline } from './modules/import/services/import-pipeline.js';
 import { FilePicker } from './modules/import/ui/file-picker.js';
-import { ValidationReportView } from './modules/import/ui/validation-report.js';
+import { MappingPreview } from './modules/import/ui/mapping-preview.js';
 import { ImportProgress } from './modules/import/ui/import-progress.js';
+import type {
+  FlexibleValidationReport,
+  InferenceReport,
+  MappingDecision,
+  RawTable,
+} from './modules/import/domain/types.js';
+import { workspaceBlobKey } from './modules/workspace/domain/keys.js';
+import type { WorkspacePayloadV1 } from './modules/workspace/services/workspace-service.js';
 import { ExportService } from './modules/export/services/export-service.js';
 import { ExportDialog } from './modules/export/ui/export-dialog.js';
 import { mountDashboard } from './modules/dashboard/index.js';
@@ -176,6 +184,14 @@ const PAGE_TITLE_BY_PATH = new Map<string, string>(
 const bootRouter = (unlocked: UnlockedWorkspace): void => {
   currentUnlocked = unlocked;
   root.innerHTML = '';
+
+  // Mutable session payload — flexible import + future record CRUD will
+  // replace this reference and persist via `unlocked.store`.
+  let currentPayload: WorkspacePayloadV1 = unlocked.payload;
+  const persistCurrentPayload = async (next: WorkspacePayloadV1): Promise<void> => {
+    await unlocked.store.writePayload(workspaceBlobKey(unlocked.workspaceId), next);
+    currentPayload = next;
+  };
 
   // ── App-shell scaffold ─────────────────────────────────────────────
   const shell = document.createElement('div');
@@ -335,9 +351,63 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           `;
           main.appendChild(heading);
 
+          const records = currentPayload.records as ReadonlyArray<
+            import('./modules/records/domain/types.js').FinancialRecord
+          >;
+          const categories = currentPayload.categories as ReadonlyArray<
+            import('./modules/records/domain/types.js').Category
+          >;
+          const categoryById = new Map(categories.map((c) => [c.id, c]));
+
           const placeholder = document.createElement('div');
           placeholder.className = 'card';
-          placeholder.innerHTML = `<p class="text-muted">${t('records.list.empty')}</p>`;
+          if (records.length === 0) {
+            placeholder.innerHTML = `<p class="text-muted">${t('records.list.empty')}</p>`;
+          } else {
+            const minorUnits = currentPayload.workspace.currencyMinorUnits;
+            const formatter = new Intl.NumberFormat(currentPayload.workspace.locale, {
+              style: 'currency',
+              currency: currentPayload.workspace.currency,
+              minimumFractionDigits: minorUnits,
+            });
+            const rowsHtml = records
+              .slice(0, 200)
+              .map((r) => {
+                const factor = Math.pow(10, minorUnits);
+                const amount = formatter.format(r.amount / factor);
+                const cat = categoryById.get(r.categoryId)?.name ?? '—';
+                const cls =
+                  r.type === 'income'
+                    ? 'records-list__amount records-list__amount--income'
+                    : 'records-list__amount records-list__amount--expense';
+                const safeDesc = r.description.replace(/[&<>]/g, (c) =>
+                  c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;',
+                );
+                return `<tr class="records-list__row records-list__row--${r.type}">
+                  <td class="records-list__date">${r.date}</td>
+                  <td><span class="records-list__type-cell"><span class="records-list__type-dot"></span>${t(`records.type.${r.type}`)}</span></td>
+                  <td class="records-list__description">${safeDesc}</td>
+                  <td><span class="records-list__category">${cat}</span></td>
+                  <td class="${cls}">${amount}</td>
+                </tr>`;
+              })
+              .join('');
+            placeholder.innerHTML = `
+              <p class="text-muted" style="margin-bottom:var(--ak-space-3)">${String(records.length)} registro(s) en este espacio.</p>
+              <table class="records-list">
+                <thead>
+                  <tr>
+                    <th>${t('records.col.date')}</th>
+                    <th>${t('records.col.type')}</th>
+                    <th>${t('records.col.description')}</th>
+                    <th>${t('records.col.category')}</th>
+                    <th style="text-align:right">${t('records.col.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            `;
+          }
           main.appendChild(placeholder);
         },
       },
@@ -430,43 +500,210 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           progressHost.className = 'import-progress-host';
           main.appendChild(progressHost);
 
+          const previewHost = document.createElement('section');
+          previewHost.className = 'import-mapping-host';
+          main.appendChild(previewHost);
+
           const reportHost = document.createElement('div');
           reportHost.className = 'import-report-host';
           main.appendChild(reportHost);
 
+          const statusHost = document.createElement('div');
+          statusHost.style.padding = 'var(--ak-space-4) 0';
+          main.appendChild(statusHost);
+
           const progress = new ImportProgress(progressHost);
-
-          const importService = new ImportService({
-            persistPayload: () => Promise.resolve(),
+          const pipeline = new ImportPipeline({
+            persistPayload: (next) => persistCurrentPayload(next),
           });
 
-          let lastReport: import('./modules/import/domain/types.js').ValidationReport | null = null;
+          const ctxForInfer = {
+            workspaceCurrency: currentPayload.workspace.currency,
+            workspaceCurrencyMinorUnits: currentPayload.workspace.currencyMinorUnits,
+            workspaceLocale: currentPayload.workspace.locale,
+          };
 
-          const reportView = new ValidationReportView(reportHost, {
-            onCommit: () => {
-              progress.showCommitting();
-            },
-            onCancel: () => {
-              reportHost.innerHTML = '';
-            },
-          });
+          const reset = (): void => {
+            previewHost.innerHTML = '';
+            reportHost.innerHTML = '';
+            statusHost.textContent = '';
+            progress.hide();
+          };
+
+          const showStatus = (kind: 'success' | 'warning' | 'danger', msg: string): void => {
+            statusHost.innerHTML = `<div class="alert alert--${kind}"><div class="alert__body">${msg}</div></div>`;
+          };
+
+          const runValidationAndCommit = async (
+            table: RawTable,
+            decision: MappingDecision,
+            inferenceReport: InferenceReport,
+            fileKind: 'csv' | 'json',
+          ): Promise<void> => {
+            previewHost.innerHTML = '';
+            progress.showValidating();
+            // Recalculate context against the current payload so successive
+            // imports without page reload see the right existingCount.
+            const liveCtxForValidate = {
+              currency: currentPayload.workspace.currency,
+              currencyMinorUnits: currentPayload.workspace.currencyMinorUnits,
+              existingCount: (currentPayload.records as readonly unknown[]).length,
+            };
+            const valReport: FlexibleValidationReport = await pipeline.normalizeAndValidate(
+              table,
+              decision,
+              liveCtxForValidate,
+            );
+            progress.hide();
+
+            if (valReport.outcome === 'rejected-structural') {
+              showStatus('danger', t('import.error.MISSING_REQUIRED_ROLE_AFTER_MAPPING'));
+              return;
+            }
+
+            if (valReport.validRows.length === 0) {
+              // Aggregate error codes for a more actionable message.
+              const codeCounts = new Map<string, number>();
+              for (const r of valReport.errorRows) {
+                for (const code of r.codes) {
+                  codeCounts.set(code, (codeCounts.get(code) ?? 0) + 1);
+                }
+              }
+              const list = [...codeCounts.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .map(
+                  ([code, n]) =>
+                    `<li>${t(`import.error.${code}` as Parameters<typeof t>[0])} <strong>(${String(n)})</strong></li>`,
+                )
+                .join('');
+              statusHost.innerHTML = `
+                <div class="alert alert--danger">
+                  <div class="alert__body">
+                    <div class="alert__title">No hay filas válidas para importar.</div>
+                    <p>${String(valReport.errorRows.length)} fila(s) con errores. Causas más frecuentes:</p>
+                    <ul style="margin: var(--ak-space-2) 0 0; padding-left: var(--ak-space-5);">${list}</ul>
+                    <p class="text-muted" style="margin-top: var(--ak-space-3);">
+                      Revisa la convención de monto, el formato de fecha y el separador decimal en el paso anterior y reintenta.
+                    </p>
+                  </div>
+                </div>
+              `;
+              return;
+            }
+
+            // Show a one-line summary + commit immediately. (The richer
+            // ValidationReportView/v2 view is wired in a follow-up.)
+            const totalMsg =
+              `Filas: ${String(valReport.totalRows)} · ` +
+              `Válidas: ${String(valReport.validRows.length)} · ` +
+              `Errores: ${String(valReport.errorRows.length)}`;
+            statusHost.innerHTML = `<div class="alert alert--info"><div class="alert__body">${totalMsg}</div></div>`;
+
+            progress.showCommitting();
+            const commitResult = await pipeline.confirmCommit(valReport, currentPayload, {
+              truncate: false,
+              fileKind,
+              mappingDecision: decision,
+              inferenceReport,
+            });
+            progress.hide();
+
+            if (commitResult.outcome === 'cancelled') {
+              showStatus(
+                'warning',
+                'No se pudo completar la importación por el límite de capacidad. Exporta tus datos.',
+              );
+              return;
+            }
+
+            // Success — show CTA to view the imported records.
+            statusHost.innerHTML = `
+              <div class="alert alert--success">
+                <div class="alert__body">
+                  <div class="alert__title">Se importaron ${String(commitResult.batch.committedRows)} registro(s) correctamente.</div>
+                  <p>Los registros se cifraron y guardaron en este espacio de trabajo.</p>
+                  <div style="display: flex; gap: var(--ak-space-3); margin-top: var(--ak-space-4);">
+                    <button type="button" class="btn btn--primary" data-action="view-records">${t('import.commit.viewRecords')}</button>
+                  </div>
+                </div>
+              </div>
+            `;
+            const viewBtn = statusHost.querySelector<HTMLButtonElement>(
+              'button[data-action="view-records"]',
+            );
+            if (viewBtn) {
+              viewBtn.addEventListener('click', () => {
+                router.navigate('/records');
+              });
+            }
+          };
 
           new FilePicker(pickerHost, {
             onSelect: (file) => {
+              reset();
               progress.showValidating();
-              importService
-                .validate(file, unlocked.payload)
-                .then((report) => {
-                  lastReport = report;
+              const fileKind: 'csv' | 'json' =
+                file.name.endsWith('.json') || file.name.endsWith('.ndjson') ? 'json' : 'csv';
+
+              void (async () => {
+                try {
+                  const parseResult = await pipeline.parse(file);
+                  if (parseResult.rejection) {
+                    progress.hide();
+                    const code = parseResult.rejection.code;
+                    const key = `import.parser.${code}` as Parameters<typeof t>[0];
+                    showStatus('danger', t(key));
+                    return;
+                  }
+                  if (!parseResult.table) {
+                    progress.hide();
+                    showStatus('danger', 'No se pudo leer el archivo.');
+                    return;
+                  }
+                  const table = parseResult.table;
+                  const inferReport = await pipeline.infer(table, ctxForInfer);
                   progress.hide();
-                  reportView.update(report);
-                  return undefined;
-                })
-                .catch(console.error);
+
+                  // Render the MappingPreview. The operator confirms or
+                  // overrides; pipeline runs the rest on confirm.
+                  new MappingPreview(previewHost, {
+                    table,
+                    inferenceReport: inferReport,
+                    onConfirm: (decision) => {
+                      void runValidationAndCommit(table, decision, inferReport, fileKind).catch(
+                        (err: unknown) => {
+                          progress.hide();
+                          console.error(err);
+                          showStatus(
+                            'danger',
+                            err instanceof Error ? err.message : 'Error desconocido al importar.',
+                          );
+                        },
+                      );
+                    },
+                    onCancel: () => {
+                      reset();
+                    },
+                  });
+                } catch (err) {
+                  progress.hide();
+                  console.error(err);
+                  showStatus(
+                    'danger',
+                    err instanceof Error
+                      ? err.message
+                      : 'Error desconocido al procesar el archivo.',
+                  );
+                }
+              })();
             },
           });
 
-          void lastReport;
+          const cleanup = (): void => {
+            pipeline.dispose();
+            main.removeEventListener('destroy', cleanup);
+          };
+          main.addEventListener('destroy', cleanup);
         },
       },
       {
@@ -486,7 +723,7 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
 
           const dialog = new ExportDialog(dialogHost, {
             onExport: async (format) => {
-              await exportService.export(unlocked.payload, {
+              await exportService.export(currentPayload, {
                 format,
                 filterState: emptyFilterState(),
                 onEmptyConfirm: async () => {
@@ -528,14 +765,14 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           const render = (): void => {
             if (disposeDashboard) disposeDashboard();
             disposeDashboard = mountDashboard(main, {
-              records: unlocked.payload
-                .records as import('./modules/records/domain/types.js').FinancialRecord[],
-              categories: unlocked.payload
-                .categories as import('./modules/records/domain/types.js').Category[],
-              counterparties: unlocked.payload
-                .counterparties as import('./modules/records/domain/types.js').Counterparty[],
-              currencyCode: unlocked.payload.workspace.currency as string,
-              currencyMinorUnits: unlocked.payload.workspace.currencyMinorUnits,
+              records:
+                currentPayload.records as import('./modules/records/domain/types.js').FinancialRecord[],
+              categories:
+                currentPayload.categories as import('./modules/records/domain/types.js').Category[],
+              counterparties:
+                currentPayload.counterparties as import('./modules/records/domain/types.js').Counterparty[],
+              currencyCode: currentPayload.workspace.currency,
+              currencyMinorUnits: currentPayload.workspace.currencyMinorUnits,
             });
           };
 
@@ -577,8 +814,7 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
 
           void aiService
             .runInconsistenciesPass(
-              unlocked.payload
-                .records as import('./modules/records/domain/types.js').FinancialRecord[],
+              currentPayload.records as import('./modules/records/domain/types.js').FinancialRecord[],
             )
             .then((findings) => {
               view.update(findings);

@@ -1,0 +1,4 @@
+Fecha,Type,Importe,Category,Descripción,Counterparty
+2026-04-01,income,150.00,Sales,Invoice A,Acme
+2026-04-02,expense,40.50,Services,Internet bill,Telecom
+2026-04-03,income,2300.00,Sales,Invoice B,Beta

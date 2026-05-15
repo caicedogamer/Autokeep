@@ -126,5 +126,55 @@ export interface ImportCancelRequest {
   readonly requestId: string;
 }
 
-export type ImportInbound = ImportRequest | ImportCancelRequest;
-export type ImportOutbound = ImportProgressMessage | ImportFinalMessage;
+export type ImportInbound = ImportRequest | ImportCancelRequest | ImportPipelineRequest;
+export type ImportOutbound = ImportProgressMessage | ImportFinalMessage | ImportPipelineResponse;
+
+/* ---------- Flexible-import pipeline (US3v2) ---------- */
+
+/**
+ * Stage-based messages for the flexible import pipeline. The shared
+ * `requestId` correlates responses with the matching call.
+ */
+export type ImportPipelineRequest =
+  | {
+      readonly kind: 'pipeline-parse';
+      readonly requestId: string;
+      readonly fileKind: 'csv' | 'json';
+      readonly fileBuffer: ArrayBuffer;
+    }
+  | {
+      readonly kind: 'pipeline-infer';
+      readonly requestId: string;
+      readonly table: unknown; // RawTable (typed in the import module)
+      readonly ctx: unknown; // InferenceContext
+    }
+  | {
+      readonly kind: 'pipeline-normalize-validate';
+      readonly requestId: string;
+      readonly table: unknown; // RawTable
+      readonly decision: unknown; // MappingDecision
+      readonly ctx: unknown; // ImportCtx
+    };
+
+export type ImportPipelineResponse =
+  | {
+      readonly kind: 'pipeline-parsed';
+      readonly requestId: string;
+      readonly table?: unknown; // RawTable on success
+      readonly rejection?: unknown; // ParserRejection on failure
+    }
+  | {
+      readonly kind: 'pipeline-inferred';
+      readonly requestId: string;
+      readonly report: unknown; // InferenceReport
+    }
+  | {
+      readonly kind: 'pipeline-validated';
+      readonly requestId: string;
+      readonly report: unknown; // FlexibleValidationReport
+    }
+  | {
+      readonly kind: 'pipeline-error';
+      readonly requestId: string;
+      readonly reason: string;
+    };

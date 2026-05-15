@@ -1,0 +1,11 @@
+{
+  "expectedMapping": {
+    "0": "date",
+    "1": "type",
+    "2": "amount",
+    "3": "category",
+    "4": "description",
+    "5": "counterparty"
+  },
+  "description": "Argentine bank export: semicolon delimiter, DD/MM/YYYY dates, decimal comma, Spanish column names."
+}

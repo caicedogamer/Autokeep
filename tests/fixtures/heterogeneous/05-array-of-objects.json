@@ -1,0 +1,28 @@
+[
+  {
+    "date": "2026-04-01",
+    "type": "income",
+    "amount": 150.0,
+    "category": "Sales",
+    "description": "Invoice A",
+    "counterparty": "Acme",
+    "internalId": "INV-001"
+  },
+  {
+    "date": "2026-04-02",
+    "type": "expense",
+    "amount": 40.5,
+    "category": "Services",
+    "description": "Internet bill",
+    "counterparty": "Telecom"
+  },
+  {
+    "date": "2026-04-03",
+    "type": "income",
+    "amount": 2300.0,
+    "category": "Sales",
+    "description": "Invoice B",
+    "counterparty": "Beta",
+    "internalId": "INV-002"
+  }
+]

@@ -55,10 +55,91 @@ export class UnsupportedSchemaVersionError extends AutoKeepError {
  */
 type Migration = (payload: unknown) => unknown;
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
+
+/**
+ * v1 → v2 migration: backfills `FinancialRecord.extraMetadata = {}`,
+ * synthesizes `inferenceReport` + `mappingDecision` on historical
+ * `ImportBatch` entries (representing the legacy fixed-header import
+ * as `source: 'auto'`), and bumps `schemaVersion` on entities.
+ *
+ * The legacy CSV had 7 stable columns in this exact order:
+ *   0=date, 1=type, 2=amount, 3=currency, 4=category, 5=description, 6=counterparty
+ *
+ * Spec ref: specs/001-autokeep-mvp/data-model.md §v1 → v2 migration.
+ */
+const migrateV1ToV2: Migration = (payload) => {
+  if (!payload || typeof payload !== 'object') return payload;
+  const p = payload as Record<string, unknown>;
+
+  const records = Array.isArray(p['records'])
+    ? (p['records'] as Array<Record<string, unknown>>)
+    : [];
+  const importBatches = Array.isArray(p['importBatches'])
+    ? (p['importBatches'] as Array<Record<string, unknown>>)
+    : [];
+  const categories = Array.isArray(p['categories'])
+    ? (p['categories'] as Array<Record<string, unknown>>)
+    : [];
+  const counterparties = Array.isArray(p['counterparties'])
+    ? (p['counterparties'] as Array<Record<string, unknown>>)
+    : [];
+
+  const upgradedRecords = records.map((r) => ({
+    ...r,
+    extraMetadata: r['extraMetadata'] ?? {},
+    schemaVersion: 2,
+  }));
+
+  const upgradedCategories = categories.map((c) => ({ ...c, schemaVersion: 2 }));
+  const upgradedCounterparties = counterparties.map((cp) => ({ ...cp, schemaVersion: 2 }));
+
+  const legacyMapping = {
+    0: 'date',
+    1: 'type',
+    2: 'amount',
+    3: 'currency',
+    4: 'category',
+    5: 'description',
+    6: 'counterparty',
+  } as const;
+
+  const upgradedBatches = importBatches.map((b) => {
+    if (b['outcome'] === 'rejected') {
+      return { ...b, schemaVersion: 2 };
+    }
+    const importedAt =
+      typeof b['committedAt'] === 'string'
+        ? (b['committedAt'] as string)
+        : typeof b['startedAt'] === 'string'
+          ? (b['startedAt'] as string)
+          : new Date(0).toISOString();
+    return {
+      ...b,
+      schemaVersion: 2,
+      inferenceReport: b['inferenceReport'] ?? { columns: [], globalWarnings: [] },
+      mappingDecision: b['mappingDecision'] ?? {
+        mapping: legacyMapping,
+        source: 'auto',
+        warnings: [],
+        confirmedAt: importedAt,
+      },
+    };
+  });
+
+  return {
+    ...p,
+    schemaVersion: 2,
+    records: upgradedRecords,
+    categories: upgradedCategories,
+    counterparties: upgradedCounterparties,
+    importBatches: upgradedBatches,
+  };
+};
 
 const migrations: Readonly<Record<number, Migration>> = {
-  // 1 → 1: identity. Future entries: 1 → 2, 2 → 3, etc.
+  1: migrateV1ToV2,
+  // Future: 2: migrateV2ToV3, etc.
 };
 
 const migrate = (payload: unknown, fromVersion: number): unknown => {

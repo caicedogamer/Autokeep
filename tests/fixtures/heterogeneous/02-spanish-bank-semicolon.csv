@@ -1,0 +1,6 @@
+fecha;tipo;monto;rubro;detalle;cliente
+01/04/2026;ingreso;1500,00;Ventas;Factura A 0001-12345;Acme S.A.
+02/04/2026;egreso;2350,50;Servicios;Pago internet abril;Telecom Argentina
+03/04/2026;ingreso;180000,00;Ventas;Factura B 0002-99999;Beta S.R.L.
+05/04/2026;egreso;12800,00;Insumos;Resma A4 x10;Office Depot
+08/04/2026;ingreso;500,00;Ventas;Venta mostrador;Cliente ocasional

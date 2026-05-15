@@ -37,6 +37,82 @@
   color: var(--ak-color-text-muted);
 }
 
+/* Interactive resolutions (radio groups for AMBIGUOUS_* warnings). */
+
+.mapping-preview__resolutions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--ak-space-3);
+}
+
+.mapping-preview__resolution-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-3);
+  padding: var(--ak-space-4) var(--ak-space-5);
+  background: var(--ak-color-surface);
+  border: 1px solid var(--ak-color-divider);
+  border-left: 3px solid var(--ak-color-brand-500);
+  border-radius: var(--ak-radius-lg);
+}
+
+.mapping-preview__resolution-title {
+  font-size: var(--ak-text-sm);
+  font-weight: var(--ak-weight-semibold);
+  color: var(--ak-color-text);
+  letter-spacing: var(--ak-tracking-tight);
+}
+
+.mapping-preview__resolution-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ak-space-2);
+}
+
+.mapping-preview__resolution-option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ak-space-2);
+  padding: var(--ak-space-2) var(--ak-space-3);
+  border: 1px solid var(--ak-color-divider);
+  border-radius: var(--ak-radius-md);
+  font-size: var(--ak-text-sm);
+  color: var(--ak-color-text);
+  cursor: pointer;
+  transition:
+    border-color var(--ak-motion-quick) var(--ak-ease-out),
+    background-color var(--ak-motion-quick) var(--ak-ease-out);
+}
+
+.mapping-preview__resolution-option:hover {
+  border-color: var(--ak-color-border-strong);
+  background: var(--ak-color-surface-muted);
+}
+
+.mapping-preview__resolution-option input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ak-color-brand-600);
+  flex-shrink: 0;
+}
+
+.mapping-preview__resolution-option:has(input[type='radio']:checked) {
+  border-color: var(--ak-color-brand-500);
+  background: var(--ak-color-brand-50);
+  color: var(--ak-color-brand-700);
+}
+
+.mapping-preview__confirm-hint {
+  font-size: var(--ak-text-sm);
+  color: var(--ak-color-warning-soft-text);
+  background: var(--ak-color-warning-soft-bg);
+  border-left: 3px solid var(--ak-color-warning);
+  border-radius: var(--ak-radius-lg);
+  padding: var(--ak-space-3) var(--ak-space-4);
+  margin: 0;
+  text-align: right;
+}
+
 .mapping-preview__warnings {
   display: flex;
   flex-direction: column;

@@ -48,7 +48,18 @@ export interface FinancialRecord {
   readonly version: number;
   readonly createdAt: IsoDateTime;
   readonly updatedAt: IsoDateTime;
-  readonly schemaVersion: 1;
+  /**
+   * Schema version. `1` = legacy fixed-header import shape. `2` = flexible
+   * import (FR-044) records may carry an `extraMetadata` bag.
+   */
+  readonly schemaVersion: 1 | 2;
+  /**
+   * Unmapped columns preserved at import time (FR-044). Optional;
+   * absent for manually-created records and for v1 records before
+   * migration. Per the contract: ≤ 10 keys, key ≤ 60 chars, value ≤ 200
+   * chars (enforced by the import validator).
+   */
+  readonly extraMetadata?: Readonly<Record<string, string>>;
 }
 
 /** Input for creating a new record (operator-supplied; source + version assigned internally). */
@@ -83,7 +94,7 @@ export interface Category {
   readonly learnedFromAi: boolean;
   readonly createdAt: IsoDateTime;
   readonly updatedAt: IsoDateTime;
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 1 | 2;
 }
 
 export interface NewCategoryInput {
@@ -102,7 +113,7 @@ export interface Counterparty {
   readonly aliases: readonly string[];
   readonly createdAt: IsoDateTime;
   readonly updatedAt: IsoDateTime;
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 1 | 2;
 }
 
 export interface NewCounterpartyInput {

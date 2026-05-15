@@ -1,0 +1,6 @@
+date,type,amount,currency,category,description,counterparty
+2026-04-01,income,150.00,ARS,Sales,Invoice A 0001,Acme S.A.
+2026-04-02,expense,40.50,ARS,Services,Internet bill April,Telecom
+2026-04-03,income,2300.00,ARS,Sales,Invoice B 0002,Beta S.R.L.
+2026-04-05,expense,128.00,ARS,Supplies,Office supplies,Office Depot
+2026-04-08,income,500.00,ARS,Sales,Cash sale,Walk-in

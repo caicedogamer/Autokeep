@@ -183,6 +183,100 @@ export const es = {
   'theme.option.system': 'Tema del sistema',
   'theme.option.light': 'Tema claro',
   'theme.option.dark': 'Tema oscuro',
+
+  // Flexible import — semantic roles (FR-042/043)
+  'import.role.date': 'Fecha',
+  'import.role.type': 'Tipo',
+  'import.role.amount': 'Importe',
+  'import.role.category': 'Categoría',
+  'import.role.description': 'Descripción',
+  'import.role.counterparty': 'Contraparte',
+  'import.role.currency': 'Moneda',
+  'import.role.metadata': 'Metadato',
+  'import.role.ignore': 'Ignorar',
+
+  // Flexible import — confidence levels (Alta / Media / Baja, never raw decimals)
+  'import.confidence.high': 'Alta',
+  'import.confidence.medium': 'Media',
+  'import.confidence.low': 'Baja',
+
+  // Flexible import — mapping warnings (FR-046)
+  'import.warning.AMBIGUOUS_ROLE':
+    'Hay varias columnas candidatas para el mismo rol. Elige cuál usar.',
+  'import.warning.LOW_CONFIDENCE':
+    'La detección automática tiene baja confianza. Verifica la asignación.',
+  'import.warning.MIXED_TYPE_COLUMN': 'Esta columna tiene valores de tipos mezclados.',
+  'import.warning.MISSING_REQUIRED_ROLE': 'Falta asignar una columna para un campo obligatorio.',
+  'import.warning.CURRENCY_DIFFERS_FROM_WORKSPACE':
+    'La moneda del archivo no coincide con la del espacio de trabajo.',
+  'import.warning.AMBIGUOUS_DATE_FORMAT':
+    'El formato de fecha es ambiguo (DD/MM o MM/DD). Selecciona uno.',
+  'import.warning.AMBIGUOUS_DECIMAL_SEPARATOR':
+    'El separador decimal es ambiguo. Selecciona punto o coma.',
+  'import.warning.AMBIGUOUS_AMOUNT_CONVENTION':
+    'Los importes podrían estar en unidades menores (centavos) o decimales. Confirma cuál.',
+
+  // Flexible import — row error codes (FR-013)
+  'import.error.INVALID_DATE': 'Fecha inválida.',
+  'import.error.INVALID_TYPE': 'Tipo de movimiento inválido.',
+  'import.error.INVALID_AMOUNT_FORMAT': 'Formato de importe inválido.',
+  'import.error.AMOUNT_NOT_POSITIVE': 'El importe debe ser mayor que cero.',
+  'import.error.CURRENCY_DIFFERS_FROM_WORKSPACE': 'La moneda no coincide con el espacio.',
+  'import.error.CATEGORY_REQUIRED': 'Falta la categoría.',
+  'import.error.CATEGORY_TOO_LONG': 'La categoría supera los 60 caracteres.',
+  'import.error.DESCRIPTION_REQUIRED': 'Falta la descripción.',
+  'import.error.DESCRIPTION_TOO_LONG': 'La descripción supera los 280 caracteres.',
+  'import.error.COUNTERPARTY_TOO_LONG': 'La contraparte supera los 120 caracteres.',
+  'import.error.MISSING_REQUIRED_ROLE_AFTER_MAPPING':
+    'Falta una columna obligatoria después del mapeo.',
+  'import.error.METADATA_KEY_TOO_LONG': 'El nombre de un metadato supera los 60 caracteres.',
+  'import.error.METADATA_VALUE_TOO_LONG': 'Un valor de metadato supera los 200 caracteres.',
+  'import.error.METADATA_TOO_MANY_FIELDS': 'Hay más de 10 metadatos por registro.',
+
+  // Flexible import — parser-level rejection codes (FR-015)
+  'import.parser.EMPTY_FILE': 'El archivo está vacío.',
+  'import.parser.ENCODING_NOT_UTF8':
+    'La codificación del archivo no es compatible (UTF-8 o UTF-16).',
+  'import.parser.MALFORMED_CSV': 'El archivo CSV está mal formado y no se puede leer.',
+  'import.parser.MALFORMED_JSON': 'El archivo JSON está mal formado y no se puede leer.',
+  'import.parser.WRONG_TOP_LEVEL_SHAPE':
+    'El archivo JSON no tiene una estructura reconocible (array, objeto con registros, o NDJSON).',
+
+  // Flexible import — pipeline stages
+  'import.stage.parse': 'Leyendo archivo…',
+  'import.stage.infer': 'Detectando columnas…',
+  'import.stage.confirm': 'Confirmando mapeo',
+  'import.stage.normalize': 'Normalizando filas…',
+  'import.stage.validate': 'Validando datos…',
+  'import.stage.commit': 'Importando registros…',
+
+  // Flexible import — UI labels (mapping preview)
+  'import.mapping.title': 'Mapeo de columnas',
+  'import.mapping.subtitle':
+    'Confirma o corrige cómo se interpreta cada columna del archivo antes de validar.',
+  'import.mapping.confirm': 'Confirmar e importar',
+  'import.mapping.cancel': 'Cancelar',
+  'import.mapping.colRole': 'Rol',
+
+  // Flexible import — operator resolutions (when inferrer needs help)
+  'import.resolution.amountConvention.title': '¿En qué unidad vienen los importes?',
+  'import.resolution.amountConvention.minorUnits': 'Centavos (ej. 1500 = $15,00)',
+  'import.resolution.amountConvention.majorDecimal': 'Unidades + decimales (ej. 150,00 = $150,00)',
+  'import.resolution.dateFormat.title': 'Formato de fecha',
+  'import.resolution.dateFormat.iso': 'ISO (AAAA-MM-DD)',
+  'import.resolution.dateFormat.ddmmyyyy': 'DD/MM/AAAA',
+  'import.resolution.dateFormat.mmddyyyy': 'MM/DD/AAAA',
+  'import.resolution.decimalSeparator.title': 'Separador decimal',
+  'import.resolution.decimalSeparator.dot': 'Punto (1,234.56)',
+  'import.resolution.decimalSeparator.comma': 'Coma (1.234,56)',
+  'import.resolution.confirmHint': 'Selecciona una opción para continuar.',
+
+  // Confirm-button hints
+  'import.confirm.missingRoles': 'Falta mapear: {roles}',
+  'import.confirm.pending': 'Falta confirmar: {what}',
+
+  // Post-commit
+  'import.commit.viewRecords': 'Ver registros',
 } as const;
 
 export type CopyKey = keyof typeof es;

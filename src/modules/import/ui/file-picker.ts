@@ -37,7 +37,13 @@ export class FilePicker {
 
     this.fileInput = document.createElement('input');
     this.fileInput.type = 'file';
-    this.fileInput.accept = '.csv,.json,text/csv,application/json';
+    // Flexible-import (US3v2) accepts heterogeneous extensions:
+    //   .csv (comma/semicolon/tab auto-detected by the parser)
+    //   .tsv (tab-separated values)
+    //   .json (array / wrapped / NDJSON shapes)
+    //   .ndjson (newline-delimited JSON)
+    this.fileInput.accept =
+      '.csv,.tsv,.json,.ndjson,text/csv,text/tab-separated-values,application/json,application/x-ndjson';
     this.fileInput.style.display = 'none';
     this.fileInput.setAttribute('aria-hidden', 'true');
     zone.appendChild(this.fileInput);
