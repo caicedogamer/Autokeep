@@ -1,0 +1,50 @@
+[
+  {
+    "fecha": "2026-04-15",
+    "tipo": "ingreso",
+    "monto": 150000,
+    "categoria": "Ventas",
+    "descripcion": "Factura #124 - Cliente López",
+    "contraparte": "Ventas López"
+  },
+  {
+    "fecha": "2026-04-16",
+    "tipo": "gasto",
+    "monto": 45000,
+    "categoria": "Insumos",
+    "descripcion": "Compra mercadería mayorista",
+    "contraparte": "Distribuidora Norte"
+  },
+  {
+    "fecha": "2026-04-17",
+    "tipo": "ingreso",
+    "monto": 85000,
+    "categoria": "Servicios",
+    "descripcion": "Consultoría mensual - Tech solutions",
+    "contraparte": "Tech Solutions SA"
+  },
+  {
+    "fecha": "2026-04-18",
+    "tipo": "gasto",
+    "monto": 12000,
+    "categoria": "Transporte",
+    "descripcion": "Flete entrega cliente",
+    "contraparte": "Vehículos Express"
+  },
+  {
+    "fecha": "2026-04-20",
+    "tipo": "ingreso",
+    "monto": 200000,
+    "categoria": "Ventas",
+    "descripcion": "Pedido #125 - Cliente García",
+    "contraparte": ""
+  },
+  {
+    "fecha": "2026-04-21",
+    "tipo": "gasto",
+    "monto": 35000,
+    "categoria": "Alquiler",
+    "descripcion": "Alquiler local abril",
+    "contraparte": "Inmobiliaria Centro"
+  }
+]

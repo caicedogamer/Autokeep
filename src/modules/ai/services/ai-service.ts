@@ -6,7 +6,8 @@
  * Constitution Principle II: no DOM here; only domain calls + callbacks.
  */
 
-import type { FinancialRecord } from '../../records/domain/types.js';
+import type { FinancialRecord, Id, IsoDateTime } from '../../records/domain/types.js';
+import { toIsoDateTime } from '../../records/domain/types.js';
 import type { AiSettings, InconsistencyFinding, Suggestion } from '../domain/types.js';
 import { DEFAULT_AI_SETTINGS } from '../domain/types.js';
 import { suggestCategory } from '../domain/suggest.js';
@@ -61,5 +62,19 @@ export class AiService {
 
   public getSettings(): AiSettings {
     return this.settings;
+  }
+
+  /**
+   * Marks a finding as `dismissed` ("Confirmar correcto"). Returns the new
+   * findings list (immutable update). No-op if the id is not found.
+   */
+  public dismissFinding(
+    findings: readonly InconsistencyFinding[],
+    findingId: Id,
+  ): readonly InconsistencyFinding[] {
+    const updatedAt: IsoDateTime = toIsoDateTime(new Date().toISOString());
+    return findings.map((f) =>
+      f.id === findingId && f.status === 'open' ? { ...f, status: 'dismissed', updatedAt } : f,
+    );
   }
 }

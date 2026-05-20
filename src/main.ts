@@ -26,6 +26,7 @@ import { t } from './core/i18n/index.js';
 import { createThemeService } from './core/theme/index.js';
 import { CryptoService, createDefaultKdfWorker } from './core/crypto/crypto-service.js';
 import { createRouter } from './core/router/router.js';
+import type { RouteParams } from './core/router/router.js';
 import { WorkspaceService } from './modules/workspace/services/workspace-service.js';
 import { UnlockThrottle } from './modules/workspace/services/unlock-throttle.js';
 import { SetupScreen } from './modules/workspace/ui/setup-screen.js';
@@ -38,6 +39,19 @@ import { ResultCount } from './modules/filters/ui/result-count.js';
 import { FilterCoordinator } from './modules/filters/services/filter-coordinator.js';
 import { emptyFilterState } from './modules/filters/domain/types.js';
 import type { FilterState } from './modules/filters/domain/types.js';
+import { RecordsService, RecordConflictError } from './modules/records/services/records-service.js';
+import { RecordsList } from './modules/records/ui/records-list.js';
+import { RecordForm } from './modules/records/ui/record-form.js';
+import { DeleteConfirm } from './modules/records/ui/delete-confirm.js';
+import { ConflictDialog } from './modules/records/ui/conflict-dialog.js';
+import type {
+  FinancialRecord,
+  Category,
+  Counterparty,
+  Id,
+  NewRecordInput,
+  UpdateRecordInput,
+} from './modules/records/domain/types.js';
 import { ImportPipeline } from './modules/import/services/import-pipeline.js';
 import { FilePicker } from './modules/import/ui/file-picker.js';
 import { MappingPreview } from './modules/import/ui/mapping-preview.js';
@@ -54,6 +68,7 @@ import { ExportService } from './modules/export/services/export-service.js';
 import { ExportDialog } from './modules/export/ui/export-dialog.js';
 import { mountDashboard } from './modules/dashboard/index.js';
 import { AiService, InconsistenciesView, AiSettingsPanel } from './modules/ai/index.js';
+import type { InconsistencyFinding } from './modules/ai/domain/types.js';
 
 /* ---------- Theme service (singleton, started before anything else) ---------- */
 
@@ -77,10 +92,6 @@ const workspaceService = new WorkspaceService({
 
 const root = document.querySelector<HTMLElement>('#app');
 if (!root) throw new Error('#app element not found');
-
-/* ---------- Boot ---------- */
-
-let currentUnlocked: UnlockedWorkspace | null = null;
 
 /* ---------- Sidebar / topbar icons (inline SVG, 18×18, currentColor) ---------- */
 
@@ -182,7 +193,6 @@ const PAGE_TITLE_BY_PATH = new Map<string, string>(
 );
 
 const bootRouter = (unlocked: UnlockedWorkspace): void => {
-  currentUnlocked = unlocked;
   root.innerHTML = '';
 
   // Mutable session payload — flexible import + future record CRUD will
@@ -334,82 +344,142 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
     pageTitle.textContent = title ?? t('common.app.name');
   };
 
+  /* Records page composition — used by both `/records` and `/records/edit/:id`. */
+  const recordsService = new RecordsService();
+
+  const renderRecordsPage = (params: RouteParams): void => {
+    main.innerHTML = '';
+
+    const heading = document.createElement('section');
+    heading.className = 'page-header';
+    const headingText = document.createElement('div');
+    headingText.innerHTML = `
+      <h2 class="page-header__title">${t('shell.page.records')}</h2>
+      <p class="page-header__subtitle">${t('records.list.tableLabel')}</p>
+    `;
+    heading.appendChild(headingText);
+    const newBtn = document.createElement('button');
+    newBtn.type = 'button';
+    newBtn.className = 'btn btn--primary';
+    newBtn.textContent = `+ ${t('records.form.titleNew')}`;
+    heading.appendChild(newBtn);
+    main.appendChild(heading);
+
+    const listHost = document.createElement('section');
+    listHost.className = 'card';
+    main.appendChild(listHost);
+
+    const dialogHost = document.createElement('div');
+    main.appendChild(dialogHost);
+
+    const minorUnits = currentPayload.workspace.currencyMinorUnits as 0 | 2 | 3;
+
+    const renderList = (): void => {
+      const records = currentPayload.records as readonly FinancialRecord[];
+      const categories = currentPayload.categories as readonly Category[];
+      const counterparties = currentPayload.counterparties as readonly Counterparty[];
+      list.setLookups(categories, counterparties);
+      list.render(records);
+    };
+
+    const deleteConfirm = new DeleteConfirm(dialogHost);
+    const conflictDialog = new ConflictDialog(dialogHost);
+
+    const form = new RecordForm({
+      container: dialogHost,
+      categories: currentPayload.categories as readonly Category[],
+      counterparties: currentPayload.counterparties as readonly Counterparty[],
+      currencyMinorUnits: minorUnits,
+      onSubmitNew: (input: NewRecordInput): void => {
+        try {
+          const next = recordsService.create(currentPayload, input);
+          void persistCurrentPayload(next).then(() => {
+            form.close();
+            renderList();
+            return undefined;
+          });
+        } catch (err) {
+          console.error('[records] create failed', err);
+        }
+      },
+      onSubmitUpdate: (input: UpdateRecordInput): void => {
+        const tryUpdate = (effectiveInput: UpdateRecordInput): void => {
+          try {
+            const next = recordsService.update(currentPayload, effectiveInput);
+            void persistCurrentPayload(next).then(() => {
+              form.close();
+              renderList();
+              return undefined;
+            });
+          } catch (err) {
+            if (err instanceof RecordConflictError) {
+              conflictDialog.open(err.conflict, {
+                onKeepStored: (): void => {
+                  form.close();
+                  renderList();
+                },
+                onForceOverwrite: (info): void => {
+                  tryUpdate({ ...effectiveInput, version: info.storedVersion });
+                },
+              });
+              return;
+            }
+            console.error('[records] update failed', err);
+          }
+        };
+        tryUpdate(input);
+      },
+      onCancel: (): void => form.close(),
+    });
+
+    newBtn.addEventListener('click', () => form.openNew());
+
+    const list = new RecordsList({
+      container: listHost,
+      currencyCode: currentPayload.workspace.currency,
+      currencyMinorUnits: minorUnits,
+      locale: currentPayload.workspace.locale,
+      onEdit: (record): void => form.openEdit(record),
+      onDelete: (record): void => {
+        deleteConfirm.open(record, {
+          onConfirm: (r): void => {
+            const next = recordsService.delete(currentPayload, r.id);
+            void persistCurrentPayload(next).then(() => renderList());
+          },
+          onCancel: (): void => {
+            /* no-op */
+          },
+        });
+      },
+    });
+
+    renderList();
+
+    // Deep-link: /records/edit/:id auto-opens the form for that record.
+    if (params.id) {
+      const target = (currentPayload.records as readonly FinancialRecord[]).find(
+        (r) => r.id === (params.id as Id),
+      );
+      if (target) form.openEdit(target);
+    }
+
+    const cleanup = (): void => {
+      form.close();
+      main.removeEventListener('destroy', cleanup);
+    };
+    main.addEventListener('destroy', cleanup);
+  };
+
   /* Router */
   const router = createRouter(
     [
       {
         pattern: '/records',
-        handler: () => {
-          main.innerHTML = '';
-          const heading = document.createElement('section');
-          heading.className = 'page-header';
-          heading.innerHTML = `
-            <div>
-              <h2 class="page-header__title">${t('shell.page.records')}</h2>
-              <p class="page-header__subtitle">${t('records.list.tableLabel')}</p>
-            </div>
-          `;
-          main.appendChild(heading);
-
-          const records = currentPayload.records as ReadonlyArray<
-            import('./modules/records/domain/types.js').FinancialRecord
-          >;
-          const categories = currentPayload.categories as ReadonlyArray<
-            import('./modules/records/domain/types.js').Category
-          >;
-          const categoryById = new Map(categories.map((c) => [c.id, c]));
-
-          const placeholder = document.createElement('div');
-          placeholder.className = 'card';
-          if (records.length === 0) {
-            placeholder.innerHTML = `<p class="text-muted">${t('records.list.empty')}</p>`;
-          } else {
-            const minorUnits = currentPayload.workspace.currencyMinorUnits;
-            const formatter = new Intl.NumberFormat(currentPayload.workspace.locale, {
-              style: 'currency',
-              currency: currentPayload.workspace.currency,
-              minimumFractionDigits: minorUnits,
-            });
-            const rowsHtml = records
-              .slice(0, 200)
-              .map((r) => {
-                const factor = Math.pow(10, minorUnits);
-                const amount = formatter.format(r.amount / factor);
-                const cat = categoryById.get(r.categoryId)?.name ?? '—';
-                const cls =
-                  r.type === 'income'
-                    ? 'records-list__amount records-list__amount--income'
-                    : 'records-list__amount records-list__amount--expense';
-                const safeDesc = r.description.replace(/[&<>]/g, (c) =>
-                  c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;',
-                );
-                return `<tr class="records-list__row records-list__row--${r.type}">
-                  <td class="records-list__date">${r.date}</td>
-                  <td><span class="records-list__type-cell"><span class="records-list__type-dot"></span>${t(`records.type.${r.type}`)}</span></td>
-                  <td class="records-list__description">${safeDesc}</td>
-                  <td><span class="records-list__category">${cat}</span></td>
-                  <td class="${cls}">${amount}</td>
-                </tr>`;
-              })
-              .join('');
-            placeholder.innerHTML = `
-              <p class="text-muted" style="margin-bottom:var(--ak-space-3)">${String(records.length)} registro(s) en este espacio.</p>
-              <table class="records-list">
-                <thead>
-                  <tr>
-                    <th>${t('records.col.date')}</th>
-                    <th>${t('records.col.type')}</th>
-                    <th>${t('records.col.description')}</th>
-                    <th>${t('records.col.category')}</th>
-                    <th style="text-align:right">${t('records.col.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody>${rowsHtml}</tbody>
-              </table>
-            `;
-          }
-          main.appendChild(placeholder);
-        },
+        handler: (params): void => renderRecordsPage(params),
+      },
+      {
+        pattern: '/records/edit/:id',
+        handler: (params): void => renderRecordsPage(params),
       },
       {
         pattern: '/filters',
@@ -432,16 +502,91 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           countHost.className = 'filter-count-host';
           main.appendChild(countHost);
 
+          const resultsHost = document.createElement('section');
+          resultsHost.className = 'card';
+          main.appendChild(resultsHost);
+
+          const records = currentPayload.records as ReadonlyArray<
+            import('./modules/records/domain/types.js').FinancialRecord
+          >;
+          const categories = currentPayload.categories as ReadonlyArray<
+            import('./modules/records/domain/types.js').Category
+          >;
+          const counterparties = currentPayload.counterparties as ReadonlyArray<
+            import('./modules/records/domain/types.js').Counterparty
+          >;
+          const recordById = new Map<
+            string,
+            import('./modules/records/domain/types.js').FinancialRecord
+          >(records.map((r) => [r.id as unknown as string, r]));
+          const categoryById = new Map<string, string>(
+            categories.map((c) => [c.id as unknown as string, c.name]),
+          );
+          const counterpartyById = new Map<string, string>(
+            counterparties.map((cp) => [cp.id as unknown as string, cp.name]),
+          );
+
+          const minorUnits = currentPayload.workspace.currencyMinorUnits;
+          const formatter = new Intl.NumberFormat(currentPayload.workspace.locale, {
+            style: 'currency',
+            currency: currentPayload.workspace.currency,
+            minimumFractionDigits: minorUnits,
+          });
+          const factor = Math.pow(10, minorUnits);
+          const escape = (s: string): string =>
+            s.replace(/[&<>]/g, (c) => (c === '&' ? '&amp;' : c === '<' ? '&lt;' : '&gt;'));
+
+          const renderTable = (visibleIds: readonly string[]): void => {
+            resultsHost.innerHTML = '';
+            if (records.length === 0) {
+              resultsHost.innerHTML = `<p class="text-muted">${t('records.list.empty')}</p>`;
+              return;
+            }
+            if (visibleIds.length === 0) {
+              resultsHost.innerHTML = `<p class="text-muted">${t('filters.results.empty')}</p>`;
+              return;
+            }
+            const rowsHtml = visibleIds
+              .slice(0, 200)
+              .map((id) => recordById.get(id))
+              .filter((r): r is import('./modules/records/domain/types.js').FinancialRecord => !!r)
+              .map((r) => {
+                const amount = formatter.format(r.amount / factor);
+                const cat = categoryById.get(r.categoryId) ?? '—';
+                const cls =
+                  r.type === 'income'
+                    ? 'records-list__amount records-list__amount--income'
+                    : 'records-list__amount records-list__amount--expense';
+                return `<tr class="records-list__row records-list__row--${r.type}">
+                  <td class="records-list__date">${r.date}</td>
+                  <td><span class="records-list__type-cell"><span class="records-list__type-dot"></span>${t(`records.type.${r.type}`)}</span></td>
+                  <td class="records-list__description">${escape(r.description)}</td>
+                  <td><span class="records-list__category">${escape(cat)}</span></td>
+                  <td class="${cls}">${amount}</td>
+                </tr>`;
+              })
+              .join('');
+            resultsHost.innerHTML = `
+              <table class="records-list">
+                <thead>
+                  <tr>
+                    <th>${t('records.col.date')}</th>
+                    <th>${t('records.col.type')}</th>
+                    <th>${t('records.col.description')}</th>
+                    <th>${t('records.col.category')}</th>
+                    <th style="text-align:right">${t('records.col.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            `;
+          };
+
           let currentState: FilterState = emptyFilterState();
 
-          const coordinator = new FilterCoordinator((_ids, count) => {
-            resultCount.update(count, currentState);
-            activeFilters.update(currentState);
-          });
-
           const activeFilters = new ActiveFilters(chipsHost, {
-            categoryNames: new Map(),
-            counterpartyNames: new Map(),
+            categoryNames: categoryById,
+            counterpartyNames: counterpartyById,
             onRemove: (field) => {
               const s = currentState;
               currentState = {
@@ -464,17 +609,26 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           });
 
           const resultCount = new ResultCount(countHost);
-          resultCount.update(0, currentState);
+
+          const coordinator = new FilterCoordinator((ids, count) => {
+            resultCount.update(count, currentState);
+            activeFilters.update(currentState);
+            renderTable(ids);
+          });
 
           const filterBar = new FilterBar(filterHost, {
-            categories: [],
-            counterparties: [],
-            currencyMinorUnits: unlocked.payload.workspace.currencyMinorUnits,
+            categories,
+            counterparties,
+            currencyMinorUnits: minorUnits,
             onChange: (state) => {
               currentState = state;
               coordinator.setFilter(state);
             },
           });
+
+          coordinator.setRecords(records);
+          resultCount.update(records.length, currentState);
+          renderTable(records.map((r) => r.id));
 
           const cleanup = (): void => {
             coordinator.dispose();
@@ -798,28 +952,44 @@ const bootRouter = (unlocked: UnlockedWorkspace): void => {
           viewHost.className = 'ai-inconsistencies-host';
           main.appendChild(viewHost);
 
+          const persistFindings = async (
+            findings: readonly InconsistencyFinding[],
+          ): Promise<void> => {
+            await persistCurrentPayload({ ...currentPayload, inconsistencies: findings });
+          };
+
           const aiService = new AiService({
             settings: { aiEnabled: true },
-            persistFindings: () => Promise.resolve(),
+            persistFindings: (fs) => persistFindings(fs),
           });
+
+          let findings = currentPayload.inconsistencies as readonly InconsistencyFinding[];
 
           const view = new InconsistenciesView(viewHost, {
-            onDismiss: () => {
-              /* Full wiring deferred to workspace-store integration task. */
+            onDismiss: (findingId): void => {
+              const next = aiService.dismissFinding(findings, findingId as Id);
+              void persistFindings(next).then(() => {
+                findings = next;
+                view.update(findings);
+                return undefined;
+              });
             },
-            onEdit: () => {
-              router.navigate('/records');
+            onEdit: (targetRecordId): void => {
+              router.navigate(`/records/edit/${targetRecordId}`);
             },
           });
 
-          void aiService
-            .runInconsistenciesPass(
-              currentPayload.records as import('./modules/records/domain/types.js').FinancialRecord[],
-            )
-            .then((findings) => {
-              view.update(findings);
-              return undefined;
-            });
+          if (findings.length === 0) {
+            void aiService
+              .runInconsistenciesPass(currentPayload.records as readonly FinancialRecord[])
+              .then((fresh) => {
+                findings = fresh;
+                view.update(findings);
+                return undefined;
+              });
+          } else {
+            view.update(findings);
+          }
         },
       },
       {
@@ -902,12 +1072,5 @@ const showUnlock = async (): Promise<void> => {
   });
   screen.render([...workspaces], throttle);
 };
-
-// Lock any existing workspace reference on page visibility change (SC-014).
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && currentUnlocked) {
-    currentUnlocked.crypto.lock();
-  }
-});
 
 void showUnlock();

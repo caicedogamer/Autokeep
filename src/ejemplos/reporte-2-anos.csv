@@ -1,0 +1,287 @@
+fecha;tipo;monto;categoria;descripcion;contraparte
+2024-05-01;ingreso;450000;Ventas;Venta mayorista mayo - 45 unidades;Distribuciones del Sur SA
+2024-05-03;gasto;180000;Alquiler;Alquiler local comercial mayo;Inmobiliaria Delta SRL
+2024-05-05;gasto;25000;Servicios;Internet fibra óptica mayo;Telecom Argentina
+2024-05-07;gasto;15000;Transporte;Flete semanal zona sur;Logística Express
+2024-05-10;ingreso;280000;Servicios;Consultoría tecnológica empresa Alfa;Alfa Sistemas SA
+2024-05-12;gasto;35000;Insumos;Compra packaging ecológico;Pack Verde SA
+2024-05-15;gasto;85000;Sueldos;Pago empleado administrativo mayo;Rodríguez Martín
+2024-05-18;ingreso;320000;Ventas;Venta retail semana 3;Varios clientes
+2024-05-22;gasto;22000;Servicios Públicos;Electricidad mayo;Edenor
+2024-05-25;gasto;12000;Telefonía;Servicio celular mayo;Movistar
+2024-05-28;ingreso;510000;Ventas;Venta mayorista fin de mes;Distribuciones del Sur SA
+2024-05-30;gasto;45000;Impuestos;IVA mensuales mayo;AFIP
+2024-06-01;ingreso;380000;Ventas;Venta retail primera semana junio;Varios clientes
+2024-06-03;gasto;180000;Alquiler;Alquiler local comercial junio;Inmobiliaria Delta SRL
+2024-06-05;gasto;25000;Servicios;Internet fibra óptica junio;Telecom Argentina
+2024-06-08;gasto;18000;Transporte;Flete insumos varias entregas;Logística Express
+2024-06-12;ingreso;290000;Servicios;Proyecto desarrollo web cliente Beta;Beta Technologies
+2024-06-15;gasto;85000;Sueldos;Pago empleado administrativo junio;Rodríguez Martín
+2024-06-18;gasto;32000;Insumos;Material de oficina y librería;Papelera Central
+2024-06-22;ingreso;410000;Ventas;Venta mayorista junio;Distribuciones del Sur SA
+2024-06-25;gasto;22000;Servicios Públicos;Electricidad junio;Edenor
+2024-06-28;gasto;15000;Telefonía;Servicio celular junio;Movistar
+2024-06-30;gasto;55000;Impuestos;IVA mensuales junio;AFIP
+2024-07-02;ingreso;520000;Ventas;Venta mayorista julio - pedidos temporada;Distribuciones del Sur SA
+2024-07-03;gasto;180000;Alquiler;Alquiler local comercial julio;Inmobiliaria Delta SRL
+2024-07-05;gasto;28000;Servicios;Internet fibra óptica julio;Telecom Argentina
+2024-07-08;gasto;12000;Transporte;Mudanza оборудования;Mudanzas Rápidas
+2024-07-10;ingreso;350000;Servicios;Mantenimiento sistemas cliente Gama;Gama Industrial
+2024-07-12;gasto;42000;Insumos;Repuestos y herramientas;Ferretería Industrial Norte
+2024-07-15;gasto;85000;Sueldos;Pago empleado administrativo julio;Rodríguez Martín
+2024-07-18;ingreso;480000;Ventas;Venta retail temporada invernal;Varios clientes
+2024-07-22;gasto;25000;Servicios Públicos;Electricidad julio;Edenor
+2024-07-25;gasto;15000;Telefonía;Servicio celular julio;Movistar
+2024-07-28;ingreso;620000;Ventas;Venta mayorista fin de mes;Distribuciones del Sur SA
+2024-07-30;gasto;52000;Impuestos;IVA mensuales julio;AFIP
+2024-08-01;ingreso;390000;Ventas;Venta retail primera semana agosto;Varios clientes
+2024-08-03;gasto;180000;Alquiler;Alquiler local comercial agosto;Inmobiliaria Delta SRL
+2024-08-05;gasto;25000;Servicios;Internet fibra óptica agosto;Telecom Argentina
+2024-08-08;gasto;22000;Transporte;Flete zona centro;Logística Express
+2024-08-12;ingreso;310000;Servicios;Consultoría mensual cliente Delta;Delta Constructora
+2024-08-15;gasto;85000;Sueldos;Pago empleado administrativo agosto;Rodríguez Martín
+2024-08-18;gasto;38000;Insumos;Compra insumos limpieza;Distribuidora Limpie
+2024-08-22;ingreso;440000;Ventas;Venta mayorista agosto;Distribuciones del Sur SA
+2024-08-25;gasto;23000;Servicios Públicos;Electricidad agosto;Edenor
+2024-08-28;gasto;15000;Telefonía;Servicio celular agosto;Movistar
+2024-08-30;gasto;48000;Impuestos;IVA mensuales agosto;AFIP
+2024-09-01;ingreso;470000;Ventas;Venta retail septiembre;Varios clientes
+2024-09-03;gasto;180000;Alquiler;Alquiler local comercial septiembre;Inmobiliaria Delta SRL
+2024-09-05;gasto;25000;Servicios;Internet fibra óptica septiembre;Telecom Argentina
+2024-09-08;gasto;16000;Transporte;Flete distribución;Logística Express
+2024-09-10;ingreso;340000;Servicios;Servicio técnico equipo médico;Clínica San Juan
+2024-09-12;gasto;55000;Insumos;Material de construcción menor;Materiales del Centro
+2024-09-15;gasto;85000;Sueldos;Pago empleado administrativo septiembre;Rodríguez Martín
+2024-09-18;ingreso;530000;Ventas;Venta mayorista septiembre;Distribuciones del Sur SA
+2024-09-22;gasto;26000;Servicios Públicos;Electricidad septiembre;Edenor
+2024-09-25;gasto;15000;Telefonía;Servicio celular septiembre;Movistar
+2024-09-28;ingreso;490000;Ventas;Venta retail fin de mes;Varios clientes
+2024-09-30;gasto;62000;Impuestos;IVA mensuales septiembre;AFIP
+2024-10-01;ingreso;580000;Ventas;Venta mayorista octubre - pre-temporada;Distribuciones del Sur SA
+2024-10-03;gasto;180000;Alquiler;Alquiler local comercial octubre;Inmobiliaria Delta SRL
+2024-10-05;gasto;25000;Servicios;Internet fibra óptica octubre;Telecom Argentina
+2024-10-08;gasto;20000;Transporte;Flete temporada;Logística Express
+2024-10-10;ingreso;420000;Servicios;Instalación red empresa Epsilon;Epsilon Tech
+2024-10-12;gasto;48000;Insumos;Computadoras y accesorios;Tech Store Argentina
+2024-10-15;gasto;85000;Sueldos;Pago empleado administrativo octubre;Rodríguez Martín
+2024-10-18;ingreso;650000;Ventas;Venta retail temporada primavera;Varios clientes
+2024-10-22;gasto;28000;Servicios Públicos;Electricidad octubre;Edenor
+2024-10-25;gasto;15000;Telefonía;Servicio celular octubre;Movistar
+2024-10-28;ingreso;720000;Ventas;Venta mayorista fin de mes;Distribuciones del Sur SA
+2024-10-30;gasto;71000;Impuestos;IVA mensuales octubre;AFIP
+2024-11-01;ingreso;610000;Ventas;Venta retail noviembre;Varios clientes
+2024-11-03;gasto;180000;Alquiler;Alquiler local comercial noviembre;Inmobiliaria Delta SRL
+2024-11-05;gasto;25000;Servicios;Internet fibra óptica noviembre;Telecom Argentina
+2024-11-08;gasto;25000;Transporte;Flete mercadería semanal;Logística Express
+2024-11-10;ingreso;380000;Servicios;Consultoría infraestructura cliente Zeta;Zeta Mining SA
+2024-11-12;gasto;65000;Insumos;Materia prima procesamiento;Plásticos Industriales
+2024-11-15;gasto;85000;Sueldos;Pago empleado administrativo noviembre;Rodríguez Martín
+2024-11-18;ingreso;580000;Ventas;Venta mayorista noviembre;Distribuciones del Sur SA
+2024-11-22;gasto;30000;Servicios Públicos;Electricidad noviembre;Edenor
+2024-11-25;gasto;15000;Telefonía;Servicio celular noviembre;Movistar
+2024-11-28;ingreso;830000;Ventas;Venta retail Black Friday;Varios clientes
+2024-11-30;gasto;85000;Impuestos;IVA mensuales noviembre;AFIP
+2024-12-01;ingreso;750000;Ventas;Venta mayorista diciembre - festividades;Distribuciones del Sur SA
+2024-12-03;gasto;180000;Alquiler;Alquiler local comercial diciembre;Inmobiliaria Delta SRL
+2024-12-05;gasto;25000;Servicios;Internet fibra óptica diciembre;Telecom Argentina
+2024-12-08;gasto;35000;Transporte;Flete temporada navideña;Logística Express
+2024-12-10;ingreso;680000;Servicios;Servicio implementación año nuevo;Heladería Artesanal
+2024-12-12;gasto;72000;Insumos;Ingredientes y packaging festivo;Distribuidora Alimenticia
+2024-12-15;gasto;85000;Sueldos;Pago empleado administrativo diciembre;Rodríguez Martín
+2024-12-18;ingreso;920000;Ventas;Venta retail navideña;Varios clientes
+2024-12-22;gasto;38000;Servicios Públicos;Electricidad diciembre;Edenor
+2024-12-28;gasto;15000;Telefonía;Servicio celular diciembre;Movistar
+2024-12-30;ingreso;1050000;Ventas;Venta mayorista cierre anual;Distribuciones del Sur SA
+2024-12-31;gasto;120000;Impuestos;IVA y contribuciones anuales;AFIP
+2025-01-02;ingreso;420000;Ventas;Venta retail primera semana enero;Varios clientes
+2025-01-03;gasto;185000;Alquiler;Alquiler local comercial enero 2025;Inmobiliaria Delta SRL
+2025-01-05;gasto;25000;Servicios;Internet fibra óptica enero;Telecom Argentina
+2025-01-08;gasto;14000;Transporte;Flete eerste semana;Logística Express
+2025-01-10;ingreso;350000;Servicios;Consultoría inicial proyecto nuevo cliente Eta;Eta Finance
+2025-01-12;gasto;52000;Insumos;Útiles de oficina y-cartuchos tinta;Papelera Central
+2025-01-15;gasto;90000;Sueldos;Pago empleado administrativo enero;Rodríguez Martín
+2025-01-18;ingreso;480000;Ventas;Venta mayorista enero;Distribuciones del Sur SA
+2025-01-22;gasto;27000;Servicios Públicos;Electricidad enero;Edenor
+2025-01-25;gasto;15000;Telefonía;Servicio celular enero;Movistar
+2025-01-28;ingreso;550000;Ventas;Venta retail fin de mes;Varios clientes
+2025-01-31;gasto;58000;Impuestos;IVA mensuales enero;AFIP
+2025-02-01;ingreso;380000;Ventas;Venta retail febrero;Varios clientes
+2025-02-03;gasto;185000;Alquiler;Alquiler local comercial febrero;Inmobiliaria Delta SRL
+2025-02-05;gasto;25000;Servicios;Internet fibra óptica febrero;Telecom Argentina
+2025-02-08;gasto;18000;Transporte;Flete Valentines;Logística Express
+2025-02-10;ingreso;320000;Servicios;Mantenimiento preventivo cliente Delta;Delta Constructora
+2025-02-12;gasto;38000;Insumos;Repuestos mecánicos;Ferretería Industrial Norte
+2025-02-15;gasto;90000;Sueldos;Pago empleado administrativo febrero;Rodríguez Martín
+2025-02-18;ingreso;450000;Ventas;Venta mayorista febrero;Distribuciones del Sur SA
+2025-02-22;gasto;25000;Servicios Públicos;Electricidad febrero;Edenor
+2025-02-25;gasto;15000;Telefonía;Servicio celular febrero;Movistar
+2025-02-28;ingreso;490000;Ventas;Venta retail febrero;Varios clientes
+2025-02-28;gasto;52000;Impuestos;IVA mensuales febrero;AFIP
+2025-03-01;ingreso;510000;Ventas;Venta retail marzo;Varios clientes
+2025-03-03;gasto;185000;Alquiler;Alquiler local comercial marzo;Inmobiliaria Delta SRL
+2025-03-05;gasto;25000;Servicios;Internet fibra óptica marzo;Telecom Argentina
+2025-03-08;gasto;22000;Transporte;Flete zona norte;Logística Express
+2025-03-10;ingreso;400000;Servicios;Auditoría sistemas cliente Fi;Fi Consulting
+2025-03-12;gasto;61000;Insumos;Equipamiento oficina;Tech Store Argentina
+2025-03-15;gasto;90000;Sueldos;Pago empleado administrativo marzo;Rodríguez Martín
+2025-03-18;ingreso;590000;Ventas;Venta mayorista marzo;Distribuciones del Sur SA
+2025-03-22;gasto;28000;Servicios Públicos;Electricidad marzo;Edenor
+2025-03-25;gasto;15000;Telefonía;Servicio celular marzo;Movistar
+2025-03-28;ingreso;680000;Ventas;Venta retail fin de mes;Varios clientes
+2025-03-31;gasto;72000;Impuestos;IVA mensuales marzo;AFIP
+2025-04-01;ingreso;550000;Ventas;Venta retail abril;Varios clientes
+2025-04-03;gasto;185000;Alquiler;Alquiler local comercial abril;Inmobiliaria Delta SRL
+2025-04-05;gasto;25000;Servicios;Internet fibra óptica abril;Telecom Argentina
+2025-04-08;gasto;16000;Transporte;Flete semanal;Logística Express
+2025-04-10;ingreso;380000;Servicios;Implementación software cliente Eta;Eta Finance
+2025-04-12;gasto;48000;Insumos;Herramientas y materiales;Ferretería Industrial Norte
+2025-04-15;gasto;90000;Sueldos;Pago empleado administrativo abril;Rodríguez Martín
+2025-04-18;ingreso;620000;Ventas;Venta mayorista abril;Distribuciones del Sur SA
+2025-04-22;gasto;30000;Servicios Públicos;Electricidad abril;Edenor
+2025-04-25;gasto;15000;Telefonía;Servicio celular abril;Movistar
+2025-04-28;ingreso;720000;Ventas;Venta retail temporada;Varios clientes
+2025-04-30;gasto;68000;Impuestos;IVA mensuales abril;AFIP
+2025-05-01;ingreso;580000;Ventas;Venta mayorista mayo;Distribuciones del Sur SA
+2025-05-03;gasto;190000;Alquiler;Alquiler local comercial mayo;Inmobiliaria Delta SRL
+2025-05-05;gasto;25000;Servicios;Internet fibra óptica mayo;Telecom Argentina
+2025-05-08;gasto;20000;Transporte;Flete distribución;Logística Express
+2025-05-10;ingreso;430000;Servicios;Consultoría estratégica cliente Gamma;Gamma Industrial
+2025-05-12;gasto;55000;Insumos;Material de limpieza y seguridad;Distribuidora Limpie
+2025-05-15;gasto;95000;Sueldos;Pago empleado administrativo mayo;Rodríguez Martín
+2025-05-18;ingreso;650000;Ventas;Venta retail mayo;Varios clientes
+2025-05-22;gasto;32000;Servicios Públicos;Electricidad mayo;Edenor
+2025-05-25;gasto;15000;Telefonía;Servicio celular mayo;Movistar
+2025-05-28;ingreso;780000;Ventas;Venta mayorista fin de mes;Distribuciones del Sur SA
+2025-05-30;gasto;75000;Impuestos;IVA mensuales mayo;AFIP
+2025-06-01;ingreso;520000;Ventas;Venta retail primera semana junio;Varios clientes
+2025-06-03;gasto;190000;Alquiler;Alquiler local comercial junio;Inmobiliaria Delta SRL
+2025-06-05;gasto;25000;Servicios;Internet fibra óptica junio;Telecom Argentina
+2025-06-08;gasto;18000;Transporte;Flete insumos varios;Logística Express
+2025-06-10;ingreso;390000;Servicios;Desarrollo plataforma web cliente Iota;Iota Innovations
+2025-06-12;gasto;62000;Insumos;Materia prima para producción;Plásticos Industriales
+2025-06-15;gasto;95000;Sueldos;Pago empleado administrativo junio;Rodríguez Martín
+2025-06-18;ingreso;590000;Ventas;Venta mayorista junio;Distribuciones del Sur SA
+2025-06-22;gasto;28000;Servicios Públicos;Electricidad junio;Edenor
+2025-06-25;gasto;15000;Telefonía;Servicio celular junio;Movistar
+2025-06-28;ingreso;710000;Ventas;Venta retail temporada invernal;Varios clientes
+2025-06-30;gasto;82000;Impuestos;IVA mensuales junio;AFIP
+2025-07-01;ingreso;650000;Ventas;Venta mayorista julio;Distribuciones del Sur SA
+2025-07-03;gasto;190000;Alquiler;Alquiler local comercial julio;Inmobiliaria Delta SRL
+2025-07-05;gasto;25000;Servicios;Internet fibra óptica julio;Telecom Argentina
+2025-07-08;gasto;25000;Transporte;Flete temporada invernal;Logística Express
+2025-07-10;ingreso;480000;Servicios;Mantenimiento equipos cliente Kappa;Kappa Medical
+2025-07-12;gasto;58000;Insumos;Repuestos y componentes;Tech Store Argentina
+2025-07-15;gasto;95000;Sueldos;Pago empleado administrativo julio;Rodríguez Martín
+2025-07-18;ingreso;740000;Ventas;Venta retail julio;Varios clientes
+2025-07-22;gasto;32000;Servicios Públicos;Electricidad julio;Edenor
+2025-07-25;gasto;15000;Telefonía;Servicio celular julio;Movistar
+2025-07-28;ingreso;860000;Ventas;Venta mayorista fin de mes;Distribuciones del Sur SA
+2025-07-31;gasto;88000;Impuestos;IVA mensuales julio;AFIP
+2025-08-01;ingreso;550000;Ventas;Venta retail primera semana agosto;Varios clientes
+2025-08-03;gasto;190000;Alquiler;Alquiler local comercial agosto;Inmobiliaria Delta SRL
+2025-08-05;gasto;25000;Servicios;Internet fibra óptica agosto;Telecom Argentina
+2025-08-08;gasto;19000;Transporte;Flete semanal;Logística Express
+2025-08-10;ingreso;420000;Servicios;Consultoría mensual cliente Lambda;Lambda Logistics
+2025-08-12;gasto;44000;Insumos;Material de oficina;Papelera Central
+2025-08-15;gasto;95000;Sueldos;Pago empleado administrativo agosto;Rodríguez Martín
+2025-08-18;ingreso;630000;Ventas;Venta mayorista agosto;Distribuciones del Sur SA
+2025-08-22;gasto;30000;Servicios Públicos;Electricidad agosto;Edenor
+2025-08-25;gasto;15000;Telefonía;Servicio celular agosto;Movistar
+2025-08-28;ingreso;690000;Ventas;Venta retail agosto;Varios clientes
+2025-08-31;gasto;73000;Impuestos;IVA mensuales agosto;AFIP
+2025-09-01;ingreso;600000;Ventas;Venta retail septiembre;Varios clientes
+2025-09-03;gasto;190000;Alquiler;Alquiler local comercial septiembre;Inmobiliaria Delta SRL
+2025-09-05;gasto;25000;Servicios;Internet fibra óptica septiembre;Telecom Argentina
+2025-09-08;gasto;17000;Transporte;Flete zona sur;Logística Express
+2025-09-10;ingreso;460000;Servicios;Servicio técnico cliente Mu;Mu Industrial
+2025-09-12;gasto;52000;Insumos;Herramientas profesionales;Ferretería Industrial Norte
+2025-09-15;gasto;95000;Sueldos;Pago empleado administrativo septiembre;Rodríguez Martín
+2025-09-18;ingreso;710000;Ventas;Venta mayorista septiembre;Distribuciones del Sur SA
+2025-09-22;gasto;33000;Servicios Públicos;Electricidad septiembre;Edenor
+2025-09-25;gasto;15000;Telefonía;Servicio celular septiembre;Movistar
+2025-09-28;ingreso;820000;Ventas;Venta retail fin de mes;Varios clientes
+2025-09-30;gasto;95000;Impuestos;IVA mensuales septiembre;AFIP
+2025-10-01;ingreso;750000;Ventas;Venta mayorista octubre - pre-temporada;Distribuciones del Sur SA
+2025-10-03;gasto;190000;Alquiler;Alquiler local comercial octubre;Inmobiliaria Delta SRL
+2025-10-05;gasto;25000;Servicios;Internet fibra óptica octubre;Telecom Argentina
+2025-10-08;gasto;28000;Transporte;Flete temporada primavera;Logística Express
+2025-10-10;ingreso;550000;Servicios;Implementación sistema cliente Nu;Nu Technologies
+2025-10-12;gasto;78000;Insumos;Equipamiento tecnológico;Tech Store Argentina
+2025-10-15;gasto;95000;Sueldos;Pago empleado administrativo octubre;Rodríguez Martín
+2025-10-18;ingreso;890000;Ventas;Venta retail temporada primavera;Varios clientes
+2025-10-22;gasto;35000;Servicios Públicos;Electricidad octubre;Edenor
+2025-10-25;gasto;15000;Telefonía;Servicio celular octubre;Movistar
+2025-10-28;ingreso;980000;Ventas;Venta mayorista fin de mes;Distribuciones del Sur SA
+2025-10-31;gasto;105000;Impuestos;IVA mensuales octubre;AFIP
+2025-11-01;ingreso;820000;Ventas;Venta retail noviembre;Varios clientes
+2025-11-03;gasto;190000;Alquiler;Alquiler local comercial noviembre;Inmobiliaria Delta SRL
+2025-11-05;gasto;25000;Servicios;Internet fibra óptica noviembre;Telecom Argentina
+2025-11-08;gasto;24000;Transporte;Flete semanal;Logística Express
+2025-11-10;ingreso;520000;Servicios;Consultoría arquitectura Xi;Xi Systems
+2025-11-12;gasto;68000;Insumos;Materia prima procesamiento;Plásticos Industriales
+2025-11-15;gasto;95000;Sueldos;Pago empleado administrativo noviembre;Rodríguez Martín
+2025-11-18;ingreso;950000;Ventas;Venta mayorista noviembre;Distribuciones del Sur SA
+2025-11-22;gasto;38000;Servicios Públicos;Electricidad noviembre;Edenor
+2025-11-25;gasto;15000;Telefonía;Servicio celular noviembre;Movistar
+2025-11-28;ingreso;1150000;Ventas;Venta retail Black Friday;Varios clientes
+2025-11-30;gasto;118000;Impuestos;IVA mensuales noviembre;AFIP
+2025-12-01;ingreso;980000;Ventas;Venta mayorista diciembre;Distribuciones del Sur SA
+2025-12-03;gasto;195000;Alquiler;Alquiler local comercial diciembre;Inmobiliaria Delta SRL
+2025-12-05;gasto;25000;Servicios;Internet fibra óptica diciembre;Telecom Argentina
+2025-12-08;gasto;42000;Transporte;Flete temporada navideña;Logística Express
+2025-12-10;ingreso;750000;Servicios;Servicio especial fiestas cliente Omicron;Omicron Retail
+2025-12-12;gasto;85000;Insumos;Productos festivos y decoración;Distribuidora Alimenticia
+2025-12-15;gasto;95000;Sueldos;Pago empleado administrativo diciembre;Rodríguez Martín
+2025-12-18;ingreso;1280000;Ventas;Venta retail navideña;Varios clientes
+2025-12-22;gasto;45000;Servicios Públicos;Electricidad diciembre;Edenor
+2025-12-28;ingreso;1420000;Ventas;Venta mayorista cierre anual;Distribuciones del Sur SA
+2025-12-30;gasto;15000;Telefonía;Servicio celular diciembre;Movistar
+2025-12-31;gasto;155000;Impuestos;IVA y contribuciones anuales;AFIP
+2026-01-02;ingreso;680000;Ventas;Venta retail primera semana enero;Varios clientes
+2026-01-03;gasto;195000;Alquiler;Alquiler local comercial enero 2026;Inmobiliaria Delta SRL
+2026-01-05;gasto;25000;Servicios;Internet fibra óptica enero;Telecom Argentina
+2026-01-08;gasto;16000;Transporte;Flete primera semana año;Logística Express
+2026-01-10;ingreso;480000;Servicios;Planificación anual cliente Pi;Pi Consulting
+2026-01-12;gasto;55000;Insumos;Útiles y materiales inicio año;Papelera Central
+2026-01-15;gasto;100000;Sueldos;Pago empleado administrativo enero;Rodríguez Martín
+2026-01-18;ingreso;820000;Ventas;Venta mayorista enero;Distribuciones del Sur SA
+2026-01-22;gasto;34000;Servicios Públicos;Electricidad enero;Edenor
+2026-01-25;gasto;15000;Telefonía;Servicio celular enero;Movistar
+2026-01-28;ingreso;890000;Ventas;Venta retail fin de mes;Varios clientes
+2026-01-31;gasto;92000;Impuestos;IVA mensuales enero;AFIP
+2026-02-01;ingreso;590000;Ventas;Venta retail febrero;Varios clientes
+2026-02-03;gasto;195000;Alquiler;Alquiler local comercial febrero;Inmobiliaria Delta SRL
+2026-02-05;gasto;25000;Servicios;Internet fibra óptica febrero;Telecom Argentina
+2026-02-08;gasto;18000;Transporte;Flete San Valentín;Logística Express
+2026-02-10;ingreso;450000;Servicios;Consultoría estratégica cliente Ro;Ro Enterprises
+2026-02-12;gasto;48000;Insumos;Repuestos mecánicos;Ferretería Industrial Norte
+2026-02-15;gasto;100000;Sueldos;Pago empleado administrativo febrero;Rodríguez Martín
+2026-02-18;ingreso;750000;Ventas;Venta mayorista febrero;Distribuciones del Sur SA
+2026-02-22;gasto;30000;Servicios Públicos;Electricidad febrero;Edenor
+2026-02-25;gasto;15000;Telefonía;Servicio celular febrero;Movistar
+2026-02-28;ingreso;920000;Ventas;Venta retailCarnaval;Varios clientes
+2026-02-28;gasto;98000;Impuestos;IVA mensuales febrero;AFIP
+2026-03-01;ingreso;720000;Ventas;Venta retail marzo;Varios clientes
+2026-03-03;gasto;195000;Alquiler;Alquiler local comercial marzo;Inmobiliaria Delta SRL
+2026-03-05;gasto;25000;Servicios;Internet fibra óptica marzo;Telecom Argentina
+2026-03-08;gasto;22000;Transporte;Flete zona centro;Logística Express
+2026-03-10;ingreso;580000;Servicios;Auditoría tecnológica cliente Sigma;Sigma Finance
+2026-03-12;gasto;72000;Insumos;Equipamiento oficina;Tech Store Argentina
+2026-03-15;gasto;100000;Sueldos;Pago empleado administrativo marzo;Rodríguez Martín
+2026-03-18;ingreso;880000;Ventas;Venta mayorista marzo;Distribuciones del Sur SA
+2026-03-22;gasto;36000;Servicios Públicos;Electricidad marzo;Edenor
+2026-03-25;gasto;15000;Telefonía;Servicio celular marzo;Movistar
+2026-03-28;ingreso;1050000;Ventas;Venta retail fin de mes;Varios clientes
+2026-03-31;gasto;110000;Impuestos;IVA mensuales marzo;AFIP
+2026-04-01;ingreso;850000;Ventas;Venta retail abril;Varios clientes
+2026-04-03;gasto;195000;Alquiler;Alquiler local comercial abril;Inmobiliaria Delta SRL
+2026-04-05;gasto;25000;Servicios;Internet fibra óptica abril;Telecom Argentina
+2026-04-08;gasto;20000;Transporte;Flete semanal;Logística Express
+2026-04-10;ingreso;620000;Servicios;Implementación proyecto Tau;Tau Technologies
+2026-04-12;gasto;65000;Insumos;Herramientas y materiales;Ferretería Industrial Norte
+2026-04-15;gasto;100000;Sueldos;Pago empleado administrativo abril;Rodríguez Martín
+2026-04-18;ingreso;980000;Ventas;Venta mayorista abril;Distribuciones del Sur SA
+2026-04-22;gasto;40000;Servicios Públicos;Electricidad abril;Edenor
+2026-04-25;gasto;15000;Telefonía;Servicio celular abril;Movistar
+2026-04-28;ingreso;1150000;Ventas;Venta retail temporada;Varios clientes
+2026-04-30;gasto;125000;Impuestos;IVA mensuales abril;AFIP

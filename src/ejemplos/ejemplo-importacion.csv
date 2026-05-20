@@ -1,0 +1,7 @@
+fecha;tipo;monto;categoria;descripcion;contraparte
+2026-04-15;ingreso;150000;Ventas;Factura #124 - Cliente López;Ventas López
+2026-04-16;gasto;45000;Insumos;Compra mercadería mayorista;Distribuidora Norte
+2026-04-17;ingreso;85000;Servicios;Consultoría mensual - Tech solutions;Tech Solutions SA
+2026-04-18;gasto;12000;Transporte;Flete entrega cliente;Vehículos Express
+2026-04-20;ingreso;200000;Ventas;Pedido #125 - Cliente García;
+2026-04-21;gasto;35000;Alquiler;Alquiler local abril;Inmobiliaria Centro

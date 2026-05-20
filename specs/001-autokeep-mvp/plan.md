@@ -9,7 +9,8 @@
 AutoKeep is a single-page browser application that lets a single SMB operator
 record income/expense entries, search/filter them in real time, import and
 export CSV/JSON with strict validation, view an analytical dashboard, and
-receive AI-assisted category suggestions and inconsistency findings. All
+receive
+suggestions and inconsistency findings. All
 data lives encrypted in the browser via a workspace passphrase (FR-040), is
 capped at 10,000 records per workspace (FR-041), and the UI must conform to
 WCAG 2.1 AA in Spanish (FR-037–FR-039) with measurable performance budgets
